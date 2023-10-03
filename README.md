@@ -1,4 +1,4 @@
-# Muilt_API_Handler_Routes
+# Multi_API_Handler_Routes
 
 - This lib allows you to manage multiple APIs, as well as routing logic for directing requests to the appropriate endpoints.
 
