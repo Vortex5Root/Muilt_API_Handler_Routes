@@ -5,7 +5,7 @@
 ## install with Poetry
 
 ```bash
-poetry add https://github.com/Vortex5Root/Muilt_API_Handler_Routes.git
+poetry add git+https://github.com/Vortex5Root/Multi_API_Handler_Routes.git
 ```
 
 # Usage
