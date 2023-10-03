@@ -1,6 +1,6 @@
 # Muilt_API_Handler_Routes
 
-- This lib allow you to manage multiple APIs, as well as routing logic for directing requests to the appropriate endpoints.
+- This lib allows you to manage multiple APIs, as well as routing logic for directing requests to the appropriate endpoints.
 
 ## install with Poetry
 
