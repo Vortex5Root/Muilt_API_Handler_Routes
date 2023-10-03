@@ -1,10 +1,9 @@
 [tool.poetry]
-name = "muiltapi-routes"
+name = "multiapi-routes"
 version = "0.1.0"
 description = ""
 authors = ["Vortex5Root"]
 readme = "README.md"
-packages = [{include = "muiltapi_routes"}]
 
 [tool.poetry.dependencies]
 python = "<3.12,>=3.10"
