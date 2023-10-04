@@ -19,8 +19,6 @@ class Configs(APIRouter):
         self.global_local = "config.*"
         super().__init__(*args, **kwargs)
 
-        self.apis = APIS()
-
         print(VAuth().register("config",["read","create","update","delete"],True))
         # Adding routes for different HTTP methods
         self.add_api_route("/configs", self.read_items, methods=["GET"], dependencies=[Depends(login)])
