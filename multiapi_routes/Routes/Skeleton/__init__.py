@@ -9,7 +9,7 @@ from vauth import login , VAuth
 from multiapi_routes.Libs.check      import check_skeleton, check_rules
 
 # DB 
-from Libs.DB import Skeletons
+from multiapi_routes.Libs.DB import Skeletons
 
 # Defining the skeletons class which inherits from APIRouter
 class Skeleton(APIRouter):
