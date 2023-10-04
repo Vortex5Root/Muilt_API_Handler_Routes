@@ -1,4 +1,4 @@
-from multiapi_routes.libs.DB import ConfigModel, Skeletons
+from multiapi_routes.Libs.DB import ConfigModel, Skeletons
 
 from typing import Any, Dict, List, Optional
 
