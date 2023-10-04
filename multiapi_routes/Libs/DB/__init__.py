@@ -24,4 +24,21 @@ class ConfigModel(JsonModel):
         self.date_updated_timestamp = now.timestamp()
         super().save()
 
+class Skeletons(JsonModel):
+    id : str = Field(index=True, primary_key=True)
+    type_model : str = Field(index=True)
+    skeleton : Dict[str, Any]
+    date_created_timestamp: Optional[float] = Field(index=True)
+    date_updated_timestamp: Optional[float] = Field(index=True)
+    date_accessed_timestamp: Optional[float] = Field(index=True)
+
+    def save(self) -> None:
+        now = datetime.now()
+        if self.date_created_timestamp is None:
+            self.date_created_timestamp = now.timestamp()
+        if self.date_accessed_timestamp is None:
+            self.date_accessed_timestamp = now.timestamp()
+        self.date_updated_timestamp = now.timestamp()
+        super().save()
+
 Migrator().run()
