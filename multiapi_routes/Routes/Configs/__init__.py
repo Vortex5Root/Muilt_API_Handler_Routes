@@ -6,10 +6,10 @@ from typing  import Dict
 from fastapi import APIRouter, Depends, HTTPException
 # Functions
 from vauth import login , VAuth
-from Libs.check      import check_config, check_rules
+from multiapi_routes.Libs.check      import check_config, check_rules
 
 # DB 
-from Libs.DB import ConfigModel
+from multiapi_routes.Libs.DB import ConfigModel
 
 # Defining the configs class which inherits from APIRouter
 class Configs(APIRouter):
