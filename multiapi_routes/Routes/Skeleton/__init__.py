@@ -74,7 +74,7 @@ class Skeleton(APIRouter):
         action = "create"
         global_local = "skeleton.create.*"
         # Define the rules for the skeleton model
-        parameters = ["id","model_type","skeleton"]
+        parameters = ["id","type_model","skeleton"]
         # Check if all required parameters are skeleton
         rule_check = check_rules(rule_list=parameters, row_rest=skeleton)
         if rule_check is not True:
