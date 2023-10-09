@@ -45,16 +45,8 @@ class Skeleton(APIRouter):
                 if not items:
                     raise HTTPException(status_code=404, detail="No items found.")
                 return items
-        elif model_type != "":
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
-                items = [_ for _ in Skeletons.find(Skeletons.type_model == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
-                if not items:
-                    raise HTTPException(status_code=404, detail="No items found.")
-                return items
-            else:
-                raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
         # If id is provided, return the specific item
-        elif id != "":
+        elif id != "" and model_type == "":
             if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{id}"]):
                 item = Skeletons.find(Skeletons.id == id)
                 if item is None:
@@ -68,6 +60,14 @@ class Skeleton(APIRouter):
                 return item
             else:
                 raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
+        elif id != "" and model_type != "":
+            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
+                item = Skeletons.find((Skeletons.id == id) & (Skeletons.type_model == model_type))
+                if item is None:
+                    raise HTTPException(status_code=404,detail="No items found.")
+                if item.count() == 0:
+                    raise HTTPException(status_code=404,detail="No items found.")
+                return item.first()
 
     # Defining the create_item method
     def create_item(self, skeleton : Dict, token: str = Depends(login)):
