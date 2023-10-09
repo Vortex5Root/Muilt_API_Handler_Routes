@@ -41,13 +41,13 @@ class Skeleton(APIRouter):
             return items
         elif id == "" and model_type != "":
             if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
-                items = [_ for _ in Skeletons.find(Skeletons.model_type == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"] and _.id == id)]
+                items = [_ for _ in Skeletons.find(Skeletons.type_model == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"] and _.id == id)]
                 if not items:
                     raise HTTPException(status_code=404, detail="No items found.")
                 return items
         elif model_type != "":
             if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
-                items = [_ for _ in Skeletons.find(Skeletons.model_type == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
+                items = [_ for _ in Skeletons.find(Skeletons.type_model == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
                 if not items:
                     raise HTTPException(status_code=404, detail="No items found.")
                 return items
@@ -91,7 +91,7 @@ class Skeleton(APIRouter):
             if not token.is_allow(f"skeleton.{skeleton['id']}"):
                 VAuth().add_premission_rg("SkeletonModel",skeleton["id"])
                 token.add_permission(f"{self.name}.{skeleton['id']}")
-            return {"info":"skeletonModel Added!","status":"Success"}
+            return {"info":f"Skeleton ({skeleton['id']}) Added!","status":"Success"}
         else:
             raise HTTPException(status_code=400, detail="Your token isn't allowed to perform this action.")
 
