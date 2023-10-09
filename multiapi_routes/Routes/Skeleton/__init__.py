@@ -79,7 +79,7 @@ class Skeleton(APIRouter):
         rule_check = check_rules(rule_list=parameters, row_rest=skeleton)
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
-        self.apis.read_items(token,id=skeleton["id"])
+        #self.apis.read_items(token,id=skeleton["id"])
         # If the token is allowed, create the skeleton model
         if token.is_allow([self.global_local, global_local, f"skeleton.create.{skeleton['id']}"]):
             try:
