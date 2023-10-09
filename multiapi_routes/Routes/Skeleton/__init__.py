@@ -31,7 +31,7 @@ class Skeleton(APIRouter):
         action = "read"
         global_local = "skeleton.read.*"
         # If id is not provided, return all items
-        if id == "":
+        if id == "" and model_type == "":
             if Skeletons.find().count() == 0:
                 raise HTTPException(status_code=404, detail="No items found.")
             items = [_ for _ in Skeletons.find().all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
