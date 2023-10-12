@@ -75,7 +75,7 @@ class Configs(APIRouter):
                 raise HTTPException(status_code=400, detail=str(e))
             # If the token is not allowed, add permission
             if not token.is_allow(f"config.{config['id']}"):
-                VAuth().add_premission_rg("ConfigModel",config["id"])
+                VAuth().add_permission_rg("ConfigModel",config["id"])
                 token.add_permission(f"{self.name}.{config['id']}")
             return {"info":"ConfigModel Added!","status":"Success"}
         else:

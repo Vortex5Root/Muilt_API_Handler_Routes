@@ -1,4 +1,4 @@
-from multiapi_routes.Libs.DB import ConfigModel, Skeletons
+from multiapi_routes.Libs.DB import ConfigModel, Skeletons, VirtualBond
 
 from typing import Any, Dict, List, Optional
 
@@ -39,3 +39,12 @@ def check_skeleton(skeleton_id: list) -> Any:
     if gc_skeleton_find.count() == 1:
         return True
     return False
+
+def check_virtual_bond(virtual_id : str) -> None:
+    """
+    Checks if a virtual bond exists with the given ID.
+    """
+    gc_virtual_bond_find = VirtualBond.find(VirtualBond.id == virtual_id)
+    if gc_virtual_bond_find.count() == 1:
+        return True
+    pass
