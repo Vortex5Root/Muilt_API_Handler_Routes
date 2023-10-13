@@ -12,7 +12,7 @@ from multiapi_routes.Libs.check      import check_virtual_bond, check_rules
 from multiapi_routes.Libs.DB import VirtualBond
 
 # Defining the VirtualBond class which inherits from APIRouter
-class Skeleton(APIRouter):
+class Virtual_Bond(APIRouter):
     # Initializing the class with necessary routes and variables
     def __init__(self, *args, **kwargs):
         self.name = "virtual_bond"
