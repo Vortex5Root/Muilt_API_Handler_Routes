@@ -9,7 +9,7 @@ from vauth import login , VAuth
 from multiapi_routes.Libs.check      import check_config, check_rules
 
 # DB 
-from multiapi_routes.Libs.DB import ConfigModel
+from multiapi_routes.Libs.DB import ConfigModel, Skeletons
 
 # Defining the configs class which inherits from APIRouter
 class Configs(APIRouter):
@@ -18,6 +18,8 @@ class Configs(APIRouter):
         self.name = "config"
         self.global_local = "config.*"
         super().__init__(*args, **kwargs)
+
+        self.skeletons = Skeletons()
 
         print(VAuth().register("config",["read","create","update","delete"],True))
         # Adding routes for different HTTP methods
@@ -65,8 +67,8 @@ class Configs(APIRouter):
         rule_check = check_rules(rule_list=parameters, row_rest=config)
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
-        api = self.apis.read_items(token,id=config["api_id"])
-        if config["function_name"] not in [_ for _ in api["skeleton"]]:
+        check_function = self.skeletons.read_items(token,id=config["api_id"])
+        if config["function_name"] not in [_ for _ in check_function["skeleton"]]:
             raise HTTPException(status_code=400, detail=f"Function name {config['function_name']} not found in api {config['api_id']}")
         # If the token is allowed, create the config model
         if token.is_allow([self.global_local, global_local, f"config.create.{config['id']}"]):
