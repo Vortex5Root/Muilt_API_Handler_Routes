@@ -60,12 +60,14 @@ class Configs(APIRouter):
         action = "create"
         global_local = "config.create.*"
         # Define the rules for the config model
-        parameters = ["id","api_id", "api_key", "config", "model_type"]
+        parameters = ["id","api_id", "function_name","config"]
         # Check if all required parameters are config
         rule_check = check_rules(rule_list=parameters, row_rest=config)
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
-        self.apis.read_items(token,id=config["api_id"])
+        api = self.apis.read_items(token,id=config["api_id"])
+        if config["function_name"] not in [_ for _ in api["skeleton"]]:
+            raise HTTPException(status_code=400, detail=f"Function name {config['function_name']} not found in api {config['api_id']}")
         # If the token is allowed, create the config model
         if token.is_allow([self.global_local, global_local, f"config.create.{config['id']}"]):
             try:
