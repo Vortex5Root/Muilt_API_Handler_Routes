@@ -8,8 +8,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from vauth import login , VAuth
 from multiapi_routes.Libs.check      import check_config, check_rules
 
+from multiapi_routes.Routes.Skeleton import Skeleton
+
 # DB 
-from multiapi_routes.Libs.DB import ConfigModel, Skeletons
+from multiapi_routes.Libs.DB import ConfigModel
 
 # Defining the configs class which inherits from APIRouter
 class Configs(APIRouter):
@@ -19,7 +21,7 @@ class Configs(APIRouter):
         self.global_local = "config.*"
         super().__init__(*args, **kwargs)
 
-        self.skeletons = Skeletons()
+        self.skeletons = Skeleton()
 
         print(VAuth().register("config",["read","create","update","delete"],True))
         # Adding routes for different HTTP methods
