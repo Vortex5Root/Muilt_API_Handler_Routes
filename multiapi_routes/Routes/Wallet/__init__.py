@@ -12,7 +12,7 @@ from multiapi_routes.Libs.check      import check_wallet, check_rules
 from multiapi_routes.Libs.DB import Wallet
 
 
-class Wallets:
+class Wallets(APIRouter):
 
 
     permissions = {
