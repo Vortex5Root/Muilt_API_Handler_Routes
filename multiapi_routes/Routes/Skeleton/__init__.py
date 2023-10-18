@@ -13,10 +13,18 @@ from multiapi_routes.Libs.DB import Skeletons
 
 # Defining the skeletons class which inherits from APIRouter
 class Skeleton(APIRouter):
+
+    permissions = {
+        "all"  : "skeleton.{}",
+        "read" : "skeleton.read.{}",
+        "create" : "skeleton.create.{}",
+        "update" : "skeleton.update.{}",
+        "delete" : "skeleton.delete.{}"
+    }
+
+
     # Initializing the class with necessary routes and variables
     def __init__(self, *args, **kwargs):
-        self.name = "skeleton"
-        self.global_local = "skeleton.*"
         super().__init__(*args, **kwargs)
 
         print(VAuth().register("skeleton",["read","create","update","delete"],True))
@@ -28,26 +36,37 @@ class Skeleton(APIRouter):
 
     # Defining the read_items method
     def read_items(self, token: str = Depends(login), id: str = "",model_type: str = ""):
-        action = "read"
-        global_local = "skeleton.read.*"
+        permission = [self.permissions["all"].format("*"),self.permissions["read"].format("*")]
         # If id is not provided, return all items
         if id == "" and model_type == "":
             if Skeletons.find().count() == 0:
                 raise HTTPException(status_code=404, detail="No Skeleton Found!") # No Skeleton Found!
-            items = [_ for _ in Skeletons.find().all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
-            #print(item)
+            items = []
+            for _ in Skeletons.find().all():
+                temp = permission.copy()
+                temp.append(self.permissions["read"].format(_.id))
+                temp.append(self.permissions["all"].format(_.id))
+                if token.is_allow(temp):
+                    items.append(_)
             if not items:
                 raise HTTPException(status_code=404, detail="No Skeleton Found!")
             return items
         elif id == "" and model_type != "":
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
-                items = [_ for _ in Skeletons.find(Skeletons.type_model == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"] and _.id == id)]
-                if not items:
-                    raise HTTPException(status_code=404, detail="No Skeleton Found!")
-                return items
+            permission.append(self.permissions["all"].format(model_type))
+            items = []
+            for _ in Skeletons.find(Skeletons.type_model == model_type).all():
+                temp = permission.copy()
+                temp.append(self.permissions["read"].format(_.id))
+                temp.append(self.permissions["all"].format(_.id))
+                if token.is_allow(temp):
+                    items.append(_)
+            if not items:
+                raise HTTPException(status_code=404, detail="No Skeleton Found!")
+            return items
         # If id is provided, return the specific item
         elif id != "" and model_type == "":
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{id}"]):
+            permission.append(self.permissions["read"].format(id))
+            if token.is_allow(permission):
                 item = Skeletons.find(Skeletons.id == id)
                 if item is None:
                     raise HTTPException(status_code=404,detail="No Skeleton Found!")
@@ -61,7 +80,10 @@ class Skeleton(APIRouter):
             else:
                 raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
         elif id != "" and model_type != "":
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
+            permission.append(self.permissions["read"].format(id))
+            permission.append(self.permissions["all"].format(id))
+            permission.append(self.permissions["all"].format(model_type))
+            if token.is_allow(permission):
                 item = Skeletons.find((Skeletons.id == id) & (Skeletons.type_model == model_type))
                 if item is None:
                     raise HTTPException(status_code=404,detail="No Skeleton Found!")
@@ -71,8 +93,7 @@ class Skeleton(APIRouter):
 
     # Defining the create_item method
     def create_item(self, skeleton : Dict, token: str = Depends(login)):
-        action = "create"
-        global_local = "skeleton.create.*"
+        permission = [self.permissions["all"].format("*"),self.permissions["create"].format("*")]
         # Define the rules for the skeleton model
         parameters = ["id","type_model","skeleton"]
         # Check if all required parameters are skeleton
@@ -81,7 +102,9 @@ class Skeleton(APIRouter):
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
         #self.apis.read_items(token,id=skeleton["id"])
         # If the token is allowed, create the skeleton model
-        if token.is_allow([self.global_local, global_local, f"skeleton.create.{skeleton['id']}"]):
+        permission.append(self.permissions["create"].format(skeleton["id"]))
+        permission.append(self.permissions["all"].format(skeleton["id"]))
+        if token.is_allow(permission):
             try:
                 new_skeleton = Skeletons(**skeleton)
                 new_skeleton.save()
@@ -97,16 +120,17 @@ class Skeleton(APIRouter):
 
     # Defining the update_item method
     def update_item(self, item: Dict, token: str = Depends(login)):
-        action = "update"
-        global_local = "skeleton.update.*"
+        permission = [self.permissions["all"].format("*"),self.permissions["update"].format("*")]
         # Define the rules for the skeleton model
         parameters = ["id","model_type","skeleton"]
         # Check if all required parameters are skeleton
         rule_check = check_rules(rule_list=parameters, row_rest=item)
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
+        permission.append(self.permissions["update"].format(item["id"]))
+        permission.append(self.permissions["all"].format(item["id"]))
         # If the token is allowed, update the skeleton model
-        if token.is_allow([self.global_local, global_local, f"skeleton.update.{item['id']}"]):
+        if token.is_allow(permission):
             try:
                 skeleton_model = Skeletons.find(Skeletons.id == item['id']).first()
                 if not skeleton_model:
@@ -122,9 +146,10 @@ class Skeleton(APIRouter):
 
     # Defining the delete_item method
     def delete_item(self, id: str, token: str = Depends(login)):
-        action = "delete"
+        permission = [self.permissions["all"].format("*"),self.permissions["delete"].format("*")]
+        permission.append(self.permissions["delete"].format(id))
         # If the token is allowed, delete the skeleton model
-        if token.is_allow([f"{self.name}.{action}.{id}"]):
+        if token.is_allow(permission):
             if not check_skeleton(id):
                 raise HTTPException(status_code=404, detail=f"Skeletons with id {id} doesn't exist!")
             try:

@@ -14,7 +14,6 @@ from multiapi_routes.Libs.DB import Wallet
 
 class Wallets(APIRouter):
 
-
     permissions = {
         "all"  : "wallet.{}",
         "read" : "wallet.read.{}",
@@ -66,7 +65,7 @@ class Wallets(APIRouter):
     def create_item(self, wallet : Dict, token: str = Depends(login)):
         permission = [self.permissions["all"].format("*"),self.permissions["create"].format("*")]
         # Define the rules for the wallet model
-        parameters = ["id","row_code"]
+        parameters = ["author","key_wallet"]
         # Check if all required parameters are wallet
         rule_check = check_rules(rule_list=parameters, row_rest=wallet)
         if rule_check is not True:
@@ -84,7 +83,7 @@ class Wallets(APIRouter):
     def update_item(self, wallet : Dict, token: str = Depends(login)):
         permission = [self.permissions["all"].format("*"),self.permissions["update"].format("*")]
         # Define the rules for the wallet model
-        parameters = ["id","row_code"]
+        parameters = ["author","key_wallet"]
         # Check if all required parameters are wallet
         rule_check = check_rules(rule_list=parameters, row_rest=wallet)
         if rule_check is not True:

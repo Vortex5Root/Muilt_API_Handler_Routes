@@ -15,6 +15,14 @@ from multiapi_routes.Libs.DB import ConfigModel
 
 # Defining the configs class which inherits from APIRouter
 class Configs(APIRouter):
+
+    permissions = {
+        "all"  : "skeleton.{}",
+        "read" : "configs.read.{}",
+        "create" : "configs.create.{}",
+        "update" : "configs.update.{}",
+        "delete" : "configs.delete.{}"
+    }
     # Initializing the class with necessary routes and variables
     def __init__(self, *args, **kwargs):
         self.name = "config"
@@ -32,20 +40,26 @@ class Configs(APIRouter):
 
     # Defining the read_items method
     def read_items(self, token: str = Depends(login), id: str = ""):
-        action = "read"
-        global_local = "config.read.*"
+        permission = [self.permissions["all"].format("*"),self.permissions["read"].format("*")]
         # If id is not provided, return all items
         if id == "":
             if ConfigModel.find().count() == 0:
                 raise HTTPException(status_code=404, detail="No items found.")
-            items = [_ for _ in ConfigModel.find().all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
-            #print(item)
+            items = []
+            for _ in ConfigModel.find().all():
+                temp = permission.copy()
+                temp.append(self.permissions["read"].format(_.id))
+                temp.append(self.permissions["all"].format(_.id))
+                if token.is_allow(temp):
+                    items.append(_)
             if not items:
                 raise HTTPException(status_code=404, detail="No items found.")
             return items
         # If id is provided, return the specific item
         else:
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{id}"]):
+            permission.append(self.permissions["read"].format(id))
+            permission.append(self.permissions["all"].format(id))
+            if token.is_allow(permission):
                 item = ConfigModel.find(ConfigModel.id == id)
                 if item is None:
                     raise HTTPException(status_code=404,detail="No items found.")
@@ -61,8 +75,7 @@ class Configs(APIRouter):
 
     # Defining the create_item method
     def create_item(self, config : Dict, token: str = Depends(login)):
-        action = "create"
-        global_local = "config.create.*"
+        permission = [self.permissions["all"].format("*"),self.permissions["create"].format("*")]
         # Define the rules for the config model
         parameters = ["id","api_id", "function_name","config"]
         # Check if all required parameters are config
@@ -73,7 +86,8 @@ class Configs(APIRouter):
         if config["function_name"] not in [_ for _ in check_function.skeleton["skeleton"]]:
             raise HTTPException(status_code=400, detail=f"Function name {config['function_name']} not found in api {config['api_id']}")
         # If the token is allowed, create the config model
-        if token.is_allow([self.global_local, global_local, f"config.create.{config['id']}"]):
+        permission.append(self.permissions["create"].format(config["id"]))  
+        if token.is_allow(permission):
             try:
                 new_config = ConfigModel(**config)
                 new_config.save()
@@ -89,16 +103,17 @@ class Configs(APIRouter):
 
     # Defining the update_item method
     def update_item(self, item: Dict, token: str = Depends(login)):
-        action = "update"
-        global_local = "config.update.*"
+        permission = [self.permissions["all"].format("*"),self.permissions["update"].format("*")]
         # Define the rules for the config model
         parameters = ["id","api_id", "api_key", "config","model_type"]
         # Check if all required parameters are config
         rule_check = check_rules(rule_list=parameters, row_rest=item)
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
+        permission.append(self.permissions["update"].format(item["id"]))
+        permission.append(self.permissions["all"].format(item["id"]))
         # If the token is allowed, update the config model
-        if token.is_allow([self.global_local, global_local, f"config.update.{item['id']}"]):
+        if token.is_allow(permission):
             try:
                 config_model = ConfigModel.find(ConfigModel.id == item['id']).first()
                 if not config_model:
@@ -114,9 +129,11 @@ class Configs(APIRouter):
 
     # Defining the delete_item method
     def delete_item(self, id: str, token: str = Depends(login)):
-        action = "delete"
+        permission = [self.permissions["all"].format("*"),self.permissions["delete"].format("*")]
+        permission.append(self.permissions["delete"].format(id))
+        permission.append(self.permissions["all"].format(id))
         # If the token is allowed, delete the config model
-        if token.is_allow([f"{self.name}.{action}.{id}"]):
+        if token.is_allow(permission):
             if not check_config(id):
                 raise HTTPException(status_code=404, detail=f"ConfigModel with id {id} doesn't exist!")
             try:
