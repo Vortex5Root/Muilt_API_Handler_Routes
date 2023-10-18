@@ -26,6 +26,7 @@ class Skeleton(APIRouter):
     # Initializing the class with necessary routes and variables
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.name = "skeleton"
 
         print(VAuth().register("skeleton",["read","create","update","delete"],True))
         # Adding routes for different HTTP methods
