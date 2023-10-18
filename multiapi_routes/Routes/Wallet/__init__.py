@@ -83,8 +83,6 @@ class Wallets(APIRouter):
     def update_item(self, new_key : Dict, token: str = Depends(login)):
         permission = [self.permissions["all"].format("*"),self.permissions["update"].format("*")]
         # Define the rules for the wallet model
-        permission.append(self.permissions["update"].format(new_key["id"]))
-        permission.append(self.permissions["all"].format(new_key["id"]))
         if not check_wallet(item.id):
             raise HTTPException(status_code=404, detail=f"Wallet with id {item.id} doesn't exist!")
         if not token.is_allow(permission):
