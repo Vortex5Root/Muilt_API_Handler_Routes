@@ -93,8 +93,8 @@ class Wallets(APIRouter):
         item = Wallet.find(Wallet.token == token.token).first()
         if not item:
             raise HTTPException(status_code=404, detail=f"Wallet with id {item.id} doesn't exist!")
-        permission.append(self.permissions["update"].format(item.id]))
-        permission.append(self.permissions["all"].format(item.id]))
+        permission.append(self.permissions["update"].format(item.id))
+        permission.append(self.permissions["all"].format(item.id))
         item.key_wallet.update(new_key)
         item = item(**new_key)
         item.save()
