@@ -33,26 +33,26 @@ class Skeleton(APIRouter):
         # If id is not provided, return all items
         if id == "" and model_type == "":
             if Skeletons.find().count() == 0:
-                raise HTTPException(status_code=404, detail="No items found.")
+                raise HTTPException(status_code=404, detail="No Skeleton Found!") # No Skeleton Found!
             items = [_ for _ in Skeletons.find().all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
             #print(item)
             if not items:
-                raise HTTPException(status_code=404, detail="No items found.")
+                raise HTTPException(status_code=404, detail="No Skeleton Found!")
             return items
         elif id == "" and model_type != "":
             if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
                 items = [_ for _ in Skeletons.find(Skeletons.type_model == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"] and _.id == id)]
                 if not items:
-                    raise HTTPException(status_code=404, detail="No items found.")
+                    raise HTTPException(status_code=404, detail="No Skeleton Found!")
                 return items
         # If id is provided, return the specific item
         elif id != "" and model_type == "":
             if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{id}"]):
                 item = Skeletons.find(Skeletons.id == id)
                 if item is None:
-                    raise HTTPException(status_code=404,detail="No items found.")
+                    raise HTTPException(status_code=404,detail="No Skeleton Found!")
                 if item.count() == 0:
-                    raise HTTPException(status_code=404,detail="No items found.")
+                    raise HTTPException(status_code=404,detail="No Skeleton Found!")
                 print(item)
                 item = item.first()
                 if not item:
@@ -64,9 +64,9 @@ class Skeleton(APIRouter):
             if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
                 item = Skeletons.find((Skeletons.id == id) & (Skeletons.type_model == model_type))
                 if item is None:
-                    raise HTTPException(status_code=404,detail="No items found.")
+                    raise HTTPException(status_code=404,detail="No Skeleton Found!")
                 if item.count() == 0:
-                    raise HTTPException(status_code=404,detail="No items found.")
+                    raise HTTPException(status_code=404,detail="No Skeleton Found!")
                 return item.first()
 
     # Defining the create_item method
