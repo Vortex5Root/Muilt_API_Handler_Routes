@@ -1,4 +1,4 @@
-from multiapi_routes.Libs.DB import ConfigModel, Skeletons, VirtualBond
+from multiapi_routes.Libs.DB import ConfigModel, Skeletons, Wallet, VirtualBond
 
 from typing import Any, Dict, List, Optional
 
@@ -47,4 +47,13 @@ def check_virtual_bond(virtual_id : str) -> None:
     gc_virtual_bond_find = VirtualBond.find(VirtualBond.id == virtual_id)
     if gc_virtual_bond_find.count() == 1:
         return True
-    pass
+    return False
+
+def check_wallet(wallet_id: str) -> None:
+    """
+    Check if a wallet exists with the given ID.
+    """
+    gc_wallet_find = Wallet.find(Wallet.id == wallet_id)
+    if gc_wallet_find.count() == 1:
+        return True
+    return False
