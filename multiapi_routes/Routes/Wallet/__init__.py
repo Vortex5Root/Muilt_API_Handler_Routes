@@ -92,7 +92,6 @@ class Wallets(APIRouter):
         permission.append(self.permissions["update"].format(item.id))
         permission.append(self.permissions["all"].format(item.id))
         item.key_wallet.update(new_key)
-        item = item(**new_key)
         item.save()
         return item
     
