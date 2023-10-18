@@ -47,7 +47,8 @@ class Wallets(APIRouter):
                 temp.append(self.permissions["read"].format(_.id))
                 temp.append(self.permissions["all"].format(_.id))
                 if token.is_allow(temp):
-                    items.append(_)
+                    if _.author == token.token:
+                        items.append(_)
             #print(item)
             if not items:
                 raise HTTPException(status_code=404, detail="No items found.")
@@ -60,6 +61,8 @@ class Wallets(APIRouter):
                 raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
             # If id is provided, return the item with the given id
             item = Wallet.find(Wallet.id == id).first()
+            if item.author != token.token:
+                raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
             return item
     
     def create_item(self, wallet : Dict, token: str = Depends(login)):
