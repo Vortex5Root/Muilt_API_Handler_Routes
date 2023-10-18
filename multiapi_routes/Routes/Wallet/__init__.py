@@ -36,7 +36,7 @@ class Wallets(APIRouter):
         self.add_api_route("/wallets", self.delete_item, methods=["DELETE"], dependencies=[Depends(login)])
 
 
-    def read_items(self, token: str = Depends(login), id: str = "",kargs : Dict = {}):
+    def read_items(self, token: str = Depends(login), id: str = "",args : Dict = {}):
         permission = [self.permissions["all"].format("*"),self.permissions["read"].format("*")]
         # If id is not provided, return all items
         if id == "":
@@ -53,12 +53,12 @@ class Wallets(APIRouter):
             if not items:
                 raise HTTPException(status_code=404, detail="No items found.")
             return items
-        elif "token" in kargs.keys():
+        elif "token" in args.keys():
             if not token.is_allow(permission):
                 raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
-            item = Wallet.find(Wallet.author == kargs["token"]).first()
+            item = Wallet.find(Wallet.author == args["token"]).first()
             if not item:
-                raise HTTPException(status_code=404, detail=f"Item with Token {kargs['token']} not found.")
+                raise HTTPException(status_code=404, detail=f"Item with Token {args['token']} not found.")
             return item
         else:
             if not check_wallet(id):
