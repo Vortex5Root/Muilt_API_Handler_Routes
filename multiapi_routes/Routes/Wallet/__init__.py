@@ -80,23 +80,23 @@ class Wallets(APIRouter):
             token.add_permission(f"{self.name}.{item.id}")
         return item
     
-    def update_item(self, wallet : Dict, token: str = Depends(login)):
+    def update_item(self, new_key : Dict, token: str = Depends(login)):
         permission = [self.permissions["all"].format("*"),self.permissions["update"].format("*")]
         # Define the rules for the wallet model
-        parameters = ["key_wallet"]
-        # Check if all required parameters are wallet
-        rule_check = check_rules(rule_list=parameters, row_rest=wallet)
-        if rule_check is not True:
-            raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
-        permission.append(self.permissions["update"].format(wallet["id"]))
-        permission.append(self.permissions["all"].format(wallet["id"]))
-        if not check_wallet(wallet["id"]):
-            raise HTTPException(status_code=404, detail=f"Wallet with id {wallet['id']} doesn't exist!")
+        permission.append(self.permissions["update"].format(new_key["id"]))
+        permission.append(self.permissions["all"].format(new_key["id"]))
+        if not check_wallet(item.id):
+            raise HTTPException(status_code=404, detail=f"Wallet with id {item.id} doesn't exist!")
         if not token.is_allow(permission):
             raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
-        wallet.update({"author":token.token})
-        item = Wallet.find(Wallet.id == wallet["id"]).first()
-        item = item(**wallet)
+        new_key.update({"author":token.token})
+        item = Wallet.find(Wallet.token == token.token).first()
+        if not item:
+            raise HTTPException(status_code=404, detail=f"Wallet with id {item.id} doesn't exist!")
+        permission.append(self.permissions["update"].format(item.id]))
+        permission.append(self.permissions["all"].format(item.id]))
+        item.key_wallet.update(new_key)
+        item = item(**new_key)
         item.save()
         return item
     
