@@ -13,6 +13,15 @@ from multiapi_routes.Libs.DB import VirtualBond
 
 # Defining the VirtualBond class which inherits from APIRouter
 class Virtual_Bond(APIRouter):
+
+    permissions = {
+        "all"  : "virtual_bond.{}",
+        "read" : "virtual_bond.read.{}",
+        "create" : "virtual_bond.create.{}",
+        "update" : "virtual_bond.update.{}",
+        "delete" : "virtual_bond.delete.{}"
+    }
+
     # Initializing the class with necessary routes and variables
     def __init__(self, *args, **kwargs):
         self.name = "virtual_bond"
@@ -21,99 +30,83 @@ class Virtual_Bond(APIRouter):
 
         print(VAuth().register("virtual_bond",["read","create","update","delete"],True))
         # Adding routes for different HTTP methods
-        self.add_api_route("/virtual/bonds", self.read_items, methods=["GET"], dependencies=[Depends(login)])
+        self.add_api_route("/virtual/bonds", self.read_items,  methods=["GET"], dependencies=[Depends(login)])
         self.add_api_route("/virtual/bonds", self.create_item, methods=["POST"], dependencies=[Depends(login)])
         self.add_api_route("/virtual/bonds", self.update_item, methods=["PUT"], dependencies=[Depends(login)])
         self.add_api_route("/virtual/bonds", self.delete_item, methods=["DELETE"], dependencies=[Depends(login)])
 
     # Defining the read_items method
-    def read_items(self, token: str = Depends(login), id: str = "",model_type: str = ""):
-        action = "read"
-        global_local = "virtual_bond.read.*"
+    def read_items(self, token: str = Depends(login), id: str = ""):
+        permission = [self.permissions["all"].format("*"),self.permissions["read"].format("*")]
         # If id is not provided, return all items
-        if id == "" and model_type == "":
+        if id == "":
             if VirtualBond.find().count() == 0:
                 raise HTTPException(status_code=404, detail="No items found.")
-            items = [_ for _ in VirtualBond.find().all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"])]
-            #print(item)
+            items = []
+            for _ in VirtualBond.find().all():
+                temp = permission.copy()
+                temp.append(self.permissions["read"].format(_.id))
+                temp.append(self.permissions["all"].format(_.id))
+                if token.is_allow(temp):
+                    items.append(_) 
             if not items:
                 raise HTTPException(status_code=404, detail="No items found.")
             return items
-        elif id == "" and model_type != "":
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
-                items = [_ for _ in VirtualBond.find(VirtualBond.type_model == model_type).all() if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{_.id}"] and _.id == id)]
-                if not items:
-                    raise HTTPException(status_code=404, detail="No items found.")
-                return items
-        # If id is provided, return the specific item
-        elif id != "" and model_type == "":
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{id}"]):
-                item = VirtualBond.find(VirtualBond.id == id)
-                if item is None:
-                    raise HTTPException(status_code=404,detail="No items found.")
-                if item.count() == 0:
-                    raise HTTPException(status_code=404,detail="No items found.")
-                print(item)
-                item = item.first()
-                if not item:
-                    raise HTTPException(status_code=404, detail=f"Item with id {id} not found.")
-                return item
-            else:
+        else:
+            if not check_virtual_bond(id):
+                raise HTTPException(status_code=404, detail=f"VirtualBond with id {id} doesn't exist!")
+            permission.append(self.permissions["read"].format(id),self.permissions["all"].format(id))
+            # If id is provided, return the item with the given id
+            item = VirtualBond.find(VirtualBond.id == id).first()
+            if not token.is_allow(permission):
                 raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
-        elif id != "" and model_type != "":
-            if token.is_allow([self.global_local, global_local, f"{self.name}.{action}.{model_type}"]):
-                item = VirtualBond.find((VirtualBond.id == id) & (VirtualBond.type_model == model_type))
-                if item is None:
-                    raise HTTPException(status_code=404,detail="No items found.")
-                if item.count() == 0:
-                    raise HTTPException(status_code=404,detail="No items found.")
-                return item.first()
+            return item
 
     # Defining the create_item method
-    def create_item(self, skeleton : Dict, token: str = Depends(login)):
-        action = "create"
-        global_local = "virtual_bond.create.*"
-        # Define the rules for the skeleton model
-        parameters = ["id","type_model","row_code"]
-        # Check if all required parameters are skeleton
-        rule_check = check_rules(rule_list=parameters, row_rest=skeleton)
+    def create_item(self, virtual_bond : Dict, token: str = Depends(login)):
+        permission = [self.permissions["all"].format("*"),self.permissions["create"].format("*")]
+        # Define the rules for the virtual_bond model
+        parameters = ["id","row_code"]
+        # Check if all required parameters are virtual_bond
+        rule_check = check_rules(rule_list=parameters, row_rest=virtual_bond)
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
-        #self.apis.read_items(token,id=skeleton["id"])
-        # If the token is allowed, create the skeleton model
-        if token.is_allow([self.global_local, global_local, f"skeleton.create.{skeleton['id']}"]):
+        #self.apis.read_items(token,id=virtual_bond["id"])
+        # If the token is allowed, create the virtual_bond model
+        if token.is_allow(permission):
             try:
-                new_skeleton = VirtualBond(**skeleton)
-                new_skeleton.save()
+                new_virtual_bond = VirtualBond(**virtual_bond)
+                new_virtual_bond.save()
             except Exception as e:
                 raise HTTPException(status_code=400, detail=str(e))
             # If the token is not allowed, add permission
-            if not token.is_allow(f"virtual_bond.{skeleton['id']}"):
-                VAuth().add_permission_rg("SkeletonModel",skeleton["id"])
-                token.add_permission(f"{self.name}.{skeleton['id']}")
-            return {"info":f"Skeleton ({skeleton['id']}) Added!","status":"Success"}
+            if not token.is_allow(f"virtual_bond.{virtual_bond['id']}"):
+                VAuth().add_permission_rg("virtual_bond",virtual_bond["id"])
+                token.add_permission(f"{self.name}.{virtual_bond['id']}")
+            return {"info":f"virtual_bond ({virtual_bond['id']}) Added!","status":"Success"}
         else:
             raise HTTPException(status_code=400, detail="Your token isn't allowed to perform this action.")
 
     # Defining the update_item method
     def update_item(self, item: Dict, token: str = Depends(login)):
-        action = "update"
-        global_local = "virtual_bond.update.*"
-        # Define the rules for the skeleton model
-        parameters = ["id","model_type","row_code"]
-        # Check if all required parameters are skeleton
+        permission = [self.permissions["all"].format("*"),self.permissions["update"].format("*")]
+        permission.append(self.permissions["update"].format(item["id"]))
+        permission.append(self.permissions["all"].format(item["id"]))
+        # Define the rules for the virtual_bond model
+        parameters = ["id","row_code"]
+        # Check if all required parameters are virtual_bond
         rule_check = check_rules(rule_list=parameters, row_rest=item)
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
-        # If the token is allowed, update the skeleton model
-        if token.is_allow([self.global_local, global_local, f"skeleton.update.{item['id']}"]):
+        # If the token is allowed, update the virtual_bond model
+        if token.is_allow(permission):
             try:
-                skeleton_model = VirtualBond.find(VirtualBond.id == item['id']).first()
-                if not skeleton_model:
+                virtual_bond_model = VirtualBond.find(VirtualBond.id == item['id']).first()
+                if not virtual_bond_model:
                     raise HTTPException(status_code=404, detail=f"VirtualBond with id {item['id']} not found.")
                 for key, value in item.items():
-                    setattr(skeleton_model, key, value)
-                skeleton_model.save()
+                    setattr(virtual_bond_model, key, value)
+                virtual_bond_model.save()
                 return {"info": f"VirtualBond {item['id']} updated", "status": "Success"}
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Error updating VirtualBond: {str(e)}")
@@ -122,9 +115,9 @@ class Virtual_Bond(APIRouter):
 
     # Defining the delete_item method
     def delete_item(self, id: str, token: str = Depends(login)):
-        action = "delete"
-        # If the token is allowed, delete the skeleton model
-        if token.is_allow([f"{self.name}.{action}.{id}"]):
+        permission = [self.permissions["all"].format("*"),self.permissions["delete"].format("*"),self.permissions["delete"].format(id)]
+        # If the token is allowed, delete the virtual_bond model
+        if token.is_allow(permission):
             if not check_virtual_bond(id):
                 raise HTTPException(status_code=404, detail=f"VirtualBond with id {id} doesn't exist!")
             try:
