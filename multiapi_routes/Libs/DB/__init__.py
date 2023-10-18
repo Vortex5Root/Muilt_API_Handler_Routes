@@ -16,6 +16,7 @@ class VirtualBond(JsonModel):
 
     def save(self) -> None:
         now = datetime.now()
+        
         if self.date_created_timestamp is None:
             self.date_created_timestamp = now.timestamp()
         if self.date_accessed_timestamp is None:
@@ -39,12 +40,11 @@ class Skeletons(JsonModel):
             self.date_accessed_timestamp = now.timestamp()
         self.date_updated_timestamp = now.timestamp()
         super().save()
-# API Keys Wallet
+
 class Wallet(JsonModel):
     id : Optional[str] = Field(index=True, primary_key=True)
-    token : str = Field(index=True)
-    apis_id : Skeletons.id = Field(index=True)
-    keys : str = Field(index=True)
+    author : str = Field(index=True)
+    key_wallet : Dict[str, Any] 
     date_created_timestamp: Optional[float] = Field(index=True)
     date_updated_timestamp: Optional[float] = Field(index=True)
     date_accessed_timestamp: Optional[float] = Field(index=True)
@@ -67,9 +67,9 @@ class ConfigModel(JsonModel):
     api_key: Optional[str]
     function_name : str = Field(index=True)
     config : Dict[str, Any]
-    date_created_timestamp: Optional[float] = Field(index=True)
-    date_updated_timestamp: Optional[float] = Field(index=True)
-    date_accessed_timestamp: Optional[float] = Field(index=True)
+    date_created_timestamp  : Optional[float] = Field(index=True)
+    date_updated_timestamp  : Optional[float] = Field(index=True)
+    date_accessed_timestamp : Optional[float] = Field(index=True)
 
     def save(self) -> None:
         now = datetime.now()
