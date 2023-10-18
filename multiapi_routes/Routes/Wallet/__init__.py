@@ -86,7 +86,7 @@ class Wallets(APIRouter):
         if not token.is_allow(permission):
             raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
         new_key.update({"author":token.token})
-        item = Wallet.find(Wallet.token == token.token).first()
+        item = Wallet.find(Wallet.author == token.token).first()
         if not item:
             raise HTTPException(status_code=404, detail=f"Wallet with id {item.id} doesn't exist!")
         permission.append(self.permissions["update"].format(item.id))
