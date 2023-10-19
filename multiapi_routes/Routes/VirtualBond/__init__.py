@@ -58,7 +58,8 @@ class Virtual_Bond(APIRouter):
                     raise HTTPException(status_code=404, detail=f"VirtualBond with id {id} doesn't exist!")
             except Exception as e:
                 raise HTTPException(status_code=404, detail=f"VirtualBond with id {id} doesn't exist!")
-            permission.append(self.permissions["read"].format(id),self.permissions["all"].format(id))
+            temp = [self.permissions["all"].format(id),self.permissions["read"].format(id)]
+            [permission.append(_) for _ in temp]
             # If id is provided, return the item with the given id
             item = VirtualBond.find(VirtualBond.id == id).first()
             if not token.is_allow(permission):
