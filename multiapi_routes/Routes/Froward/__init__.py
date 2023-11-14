@@ -51,7 +51,7 @@ class froward(APIRouter):
     <body>
         <h1>WebSocket Chat</h1>
         <form action="" onsubmit="sendMessage(event)">
-            <label>Item ID: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
+            <label>ENDPOINT: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
             <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
             <button onclick="connect(event)">Connect</button>
             <hr>
@@ -65,7 +65,7 @@ class froward(APIRouter):
             function connect(event) {
                 var itemId = document.getElementById("itemId")
                 var token = document.getElementById("token")
-                ws = new WebSocket("ws://localhost:8000/v1/multiapi/ws?token=" + token.value);
+                ws = new WebSocket("ws://"+itemId+":8000/v1/multiapi/ws?token=" + token.value);
                 ws.onmessage = function(event) {
                     var messages = document.getElementById('messages')
                     var message = document.createElement('li')
