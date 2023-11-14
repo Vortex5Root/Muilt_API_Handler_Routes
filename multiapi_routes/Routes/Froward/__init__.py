@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 from typing import Any, Dict
 
-from fastapi_websocket_rpc import WebSocketRPCEndpoint, rpc
+from fastapi_websocket_rpc import RpcMethodsBase, WebsocketRPCEndpoint
 
 from multiapi_routes.Routes.VirtualBond import Virtual_Bond
 
@@ -27,7 +27,9 @@ class froward(APIRouter):
             raise HTTPException(status_code=404, detail="No CELERY_BROKER_URL Found")
         self.celery = Celery('tasks', broker=bk)
         self.add_api_route("/froward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
-        self.add_websocket_route("/froward", Steam)
+        endpoint = WebsocketRPCEndpoint(Steam())
+        # add the endpoint to the app
+        endpoint.register_route(self, "/ws")
         
     
     def create_item(self,model : str,arg : Dict , token: str = Depends(login)):
@@ -38,8 +40,7 @@ class froward(APIRouter):
         return task.get()
 
 
-class Steam(WebSocketRPCEndpoint):
-    @rpc
+class Steam(RpcMethodsBase):
     async def stream(self,websocket: WebSocket,token: str = Depends(login)):
         await websocket.accept()
         while True:
