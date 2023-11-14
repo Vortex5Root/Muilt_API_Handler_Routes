@@ -26,7 +26,6 @@ class Virtual_Bond(APIRouter):
     def __init__(self, *args, **kwargs):
         self.name = "virtual_bond"
         self.global_local = "virtual_bond.*"
-        super().__init__(*args, **kwargs)
 
         print(VAuth().register("virtual_bond",["read","create","update","delete"],True))
         # Adding routes for different HTTP methods
@@ -34,6 +33,7 @@ class Virtual_Bond(APIRouter):
         self.add_api_route("/virtual/bonds", self.create_item, methods=["POST"], dependencies=[Depends(login)])
         self.add_api_route("/virtual/bonds", self.update_item, methods=["PUT"], dependencies=[Depends(login)])
         self.add_api_route("/virtual/bonds", self.delete_item, methods=["DELETE"], dependencies=[Depends(login)])
+        super().__init__(*args, **kwargs)
 
     # Defining the read_items method
     def read_items(self, token: str = Depends(login), id: str = ""):
