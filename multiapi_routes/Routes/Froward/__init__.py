@@ -1,4 +1,5 @@
 from fastapi import APIRouter, WebSocket ,Depends, HTTPException
+from fastapi.responses import HTMLResponse
 
 from vauth import login , VAuth
 
@@ -27,6 +28,7 @@ class froward(APIRouter):
             raise HTTPException(status_code=404, detail="No CELERY_BROKER_URL Found")
         self.celery = Celery('tasks', broker=bk)
         self.add_api_route("/froward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
+        self.add_api_route("/froward", self.Websocket_Example, methods=["GET"], dependencies=[Depends(login)])
         endpoint = WebsocketRPCEndpoint(Steam())
         # add the endpoint to the app
         endpoint.register_route(self, "/ws")
@@ -38,6 +40,34 @@ class froward(APIRouter):
         while task.status() == "DONE":
             pass
         return task.get()
+    
+    def Websocket_Example(self):
+        return HTMLResponse("""
+        <html>
+            <head>
+                <title>Websocket RPC</title>
+            </head>
+            <body>
+                <h1>Websocket RPC</h1>
+                <script>
+                    var ws = new WebSocket("ws://localhost:8000/v1/multiapi/ws");
+                    ws.onopen = function() {
+                        console.log("Websocket connection established");
+                        ws.send(JSON.stringify({
+                            "type": "websocket.connect",
+                            "id": "1"
+                        }));
+                    };
+                    ws.onmessage = function(e) {
+                        console.log("Message received:", e.data);
+                    };
+                    ws.onclose = function(e) {
+                        console.log("Connection closed:", e);
+                    };
+                </script>
+            </body>
+        </html>
+        """)
 
 
 class Steam(RpcMethodsBase):
