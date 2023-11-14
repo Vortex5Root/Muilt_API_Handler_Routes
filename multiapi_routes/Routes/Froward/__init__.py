@@ -56,7 +56,7 @@ class froward(APIRouter):
             <button onclick="connect(event)">Connect</button>
             <hr>
             <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
-            <button>Send</button>
+            <button onclick="sendMessage(event)">Send</button>
         </form>
         <ul id='messages'>
         </ul>
