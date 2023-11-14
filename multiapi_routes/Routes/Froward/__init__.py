@@ -28,7 +28,7 @@ class froward(APIRouter):
             raise HTTPException(status_code=404, detail="No CELERY_BROKER_URL Found")
         self.celery = Celery('tasks', broker=bk)
         self.add_api_route("/froward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
-        self.add_api_route("/froward", self.Websocket_Example, methods=["GET"], dependencies=[Depends(login)])
+        self.add_api_route("/froward", self.Websocket_Example, methods=["GET"])
         endpoint = WebsocketRPCEndpoint(Steam())
         # add the endpoint to the app
         endpoint.register_route(self, "/ws")
@@ -43,31 +43,48 @@ class froward(APIRouter):
     
     def Websocket_Example(self):
         return HTMLResponse("""
-        <html>
-            <head>
-                <title>Websocket RPC</title>
-            </head>
-            <body>
-                <h1>Websocket RPC</h1>
-                <script>
-                    var ws = new WebSocket("ws://localhost:8000/v1/multiapi/ws");
-                    ws.onopen = function() {
-                        console.log("Websocket connection established");
-                        ws.send(JSON.stringify({
-                            "type": "websocket.connect",
-                            "id": "1"
-                        }));
-                    };
-                    ws.onmessage = function(e) {
-                        console.log("Message received:", e.data);
-                    };
-                    ws.onclose = function(e) {
-                        console.log("Connection closed:", e);
-                    };
-                </script>
-            </body>
-        </html>
-        """)
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <form action="" onsubmit="sendMessage(event)">
+            <label>Item ID: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
+            <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
+            <button onclick="connect(event)">Connect</button>
+            <hr>
+            <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
+            <button>Send</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+        var ws = null;
+            function connect(event) {
+                var itemId = document.getElementById("itemId")
+                var token = document.getElementById("token")
+                ws = new WebSocket("ws://localhost:8000/v1/multiapi/ws?token=" + token.value);
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages')
+                    var message = document.createElement('li')
+                    var content = document.createTextNode(event.data)
+                    message.appendChild(content)
+                    messages.appendChild(message)
+                };
+                event.preventDefault()
+            }
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
+""")
 
 
 class Steam(RpcMethodsBase):
