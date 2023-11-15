@@ -29,6 +29,7 @@ class froward(APIRouter):
         self.celery = Celery('tasks', broker=bk)
         self.add_api_route("/froward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
         self.add_api_route("/froward", self.Websocket_Example, methods=["GET"])
+        self.add_api_route("/froward/stream", self.stream, methods=["websocket"])
         endpoint = WebsocketRPCEndpoint(Steam())
         # add the endpoint to the app
         endpoint.register_route(self, "/ws")
@@ -40,7 +41,26 @@ class froward(APIRouter):
         while task.status() == "DONE":
             pass
         return task.get()
-    
+
+    async def stream(self,websocket: WebSocket,token: str = Depends(login)):
+        print("stream")
+        print(token)
+        print(websocket)
+        await websocket.accept()
+        await websocket.send_json({"status":"connected"})
+        while True:
+            data = await websocket.receive_json()
+            if data["type"] == "websocket.disconnect":
+                await websocket.close()
+                break
+            else:
+                task = self.celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
+                while task.status() == "DONE":
+                    await websocket.send_json({"status":task.status(),"result":task.get()})
+                    pass
+                await websocket.send_json(task.get())
+        return "froward"
+
     def Websocket_Example(self):
         return HTMLResponse("""
 <!DOCTYPE html>
@@ -90,6 +110,7 @@ class froward(APIRouter):
 class Steam(RpcMethodsBase):
     async def stream(self,websocket: WebSocket,token: str = Depends(login)):
         await websocket.accept()
+        await websocket.send_json({"status":"connected"})
         while True:
             data = await websocket.receive_json()
             if data["type"] == "websocket.disconnect":
@@ -98,6 +119,7 @@ class Steam(RpcMethodsBase):
             else:
                 task = self.celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
                 while task.status() == "DONE":
+                    await websocket.send_json({"status":task.status(),"result":task.get()})
                     pass
                 await websocket.send_json(task.get())
         return "froward"
