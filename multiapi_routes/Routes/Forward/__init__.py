@@ -27,7 +27,7 @@ class ConnectionManager:
         """init method, keeping track of connections"""
         self.active_connections = []
     
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, token: str):
         """connect event"""
         print("Cookie:", websocket.cookies["token"])
         print("Login Output:", token)
@@ -77,7 +77,7 @@ class forward(APIRouter):
     async def websocket_endpoint(websocket: WebSocket,token : Annotated[str, Query()] = None):
         print(token)
         manager = ConnectionManager()
-        await manager.connect(websocket)
+        await manager.connect(websocket,token)
         try:
             while True:
                 data = await websocket.receive()
