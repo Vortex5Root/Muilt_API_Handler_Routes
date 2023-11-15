@@ -74,7 +74,7 @@ class forward(APIRouter):
         return task.get()
 
 
-    async def websocket_endpoint(websocket: WebSocket,token Annotated[str, Query()]):
+    async def websocket_endpoint(websocket: WebSocket,token : Annotated[str, Query()] = None):
         print(token)
         manager = ConnectionManager()
         await manager.connect(websocket)
