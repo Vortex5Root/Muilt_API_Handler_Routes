@@ -1,4 +1,6 @@
 from fastapi import APIRouter, WebSocket ,Depends, HTTPException,Cookie, Query,WebSocketException, status
+
+from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
 from vauth import login , VAuth
@@ -16,6 +18,29 @@ from multiapi_routes.Routes.VirtualBond import Virtual_Bond
 import os
 
 load_dotenv()
+
+from fastapi import WebSocket
+
+class ConnectionManager:
+    """Class defining socket events"""
+    def __init__(self):
+        """init method, keeping track of connections"""
+        self.active_connections = []
+    
+    async def connect(self, websocket: WebSocket):
+        """connect event"""
+        token = login(websocket.cookies["token"])
+        websocket.token = token
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    async def return_task(self, output: Any, websocket: WebSocket):
+        """Direct Message"""
+        await websocket.send(output)
+    
+    def disconnect(self, websocket: WebSocket):
+        """disconnect event"""
+        self.active_connections.remove(websocket)
 
 class froward(APIRouter):
 
@@ -43,35 +68,18 @@ class froward(APIRouter):
         return task.get()
 
 
-    async def get_cookie_or_token(
-        websocket: WebSocket,
-        session: Annotated[str | None, Cookie()] = None,
-        token: Annotated[str | None, Query()] = None,
-    ):
-        print("token")
-        if session is None and token is None:
-            print(status.WS_1008_POLICY_VIOLATION)
-            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
-        return session or token
-
-    async def stream(self,websocket: WebSocket,cookie_or_token: Annotated[str, Depends(get_cookie_or_token)]):
-        print("stream")
-        print(cookie_or_token)
-        print(websocket)
-        await websocket.accept()
-        await websocket.send_json({"status":"connected"})
-        while True:
-            data = await websocket.receive_json()
-            if data["type"] == "websocket.disconnect":
-                await websocket.close()
-                break
-            else:
-                task = self.celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
-                while task.status() == "DONE":
-                    await websocket.send_json({"status":task.status(),"result":task.get()})
-                    pass
-                await websocket.send_json(task.get())
-        return "froward"
+    async def websocket_endpoint(websocket: WebSocket):
+        manager = ConnectionManager()
+        await manager.connect(websocket)
+        try:
+            while True:
+                data = await websocket.receive()
+                print(data)
+                print(type(data))
+                await manager.send_personal_message(f"Received:{data}",websocket)
+        except WebSocketDisconnect:
+            manager.disconnect(websocket)
+            await manager.send_personal_message("Bye!!!",websocket)
 
     def Websocket_Example(self):
         return HTMLResponse("""
