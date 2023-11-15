@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket ,Depends, HTTPException
+from fastapi import APIRouter, WebSocket ,Depends, HTTPException,Cookie, Query,WebSocketException, status
 from fastapi.responses import HTMLResponse
 
 from vauth import login , VAuth
@@ -7,7 +7,7 @@ from celery import Celery
 
 from dotenv import load_dotenv
 
-from typing import Any, Dict
+from typing import Any, Dict, Annotated
 
 from fastapi_websocket_rpc import RpcMethodsBase, WebsocketRPCEndpoint
 
@@ -41,6 +41,19 @@ class froward(APIRouter):
         while task.status() == "DONE":
             pass
         return task.get()
+
+
+    async def get_cookie_or_token(
+        websocket: WebSocket,
+        session: Annotated[str | None, Cookie()] = None,
+        token: Annotated[str | None, Query()] = None,
+    ):
+        print("token")
+        if session is None and token is None:
+            raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
+        return session or token
+
+
 
     async def stream(self,websocket: WebSocket,token: str = Depends(login)):
         print("stream")
@@ -81,11 +94,11 @@ class froward(APIRouter):
         <ul id='messages'>
         </ul>
         <script>
-        var ws = null;
+            var ws = null;
             function connect(event) {
-                var itemId = document.getElementById("itemId")
-                var token = document.getElementById("token")
-                ws = new WebSocket("ws://"+ itemId.value +":8000/v1/multiapi/ws?token=" + token.value);
+                var itemId = document.getElementById("itemId");
+                var token = document.getElementById("token");
+                ws = new WebSocket("ws://"+ itemId.value +":8000/v1/multiapi/froward/stream?token=" + token.value);
                 ws.onmessage = function(event) {
                     var messages = document.getElementById('messages')
                     var message = document.createElement('li')
@@ -93,13 +106,13 @@ class froward(APIRouter):
                     message.appendChild(content)
                     messages.appendChild(message)
                 };
-                event.preventDefault()
+                event.preventDefault();
             }
             function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
+                var input = document.getElementById("messageText");
+                ws.send(input.value);
+                input.value = '';
+                event.preventDefault();
             }
         </script>
     </body>
