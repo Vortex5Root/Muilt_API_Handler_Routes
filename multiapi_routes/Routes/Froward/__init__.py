@@ -109,6 +109,8 @@ class froward(APIRouter):
 
 class Steam(RpcMethodsBase):
     async def stream(self,websocket: WebSocket,token: str = Depends(login)):
+        print("stream")
+        print(token.token)
         await websocket.accept()
         await websocket.send_json({"status":"connected"})
         while True:
