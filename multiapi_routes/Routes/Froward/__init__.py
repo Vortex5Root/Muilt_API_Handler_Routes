@@ -45,7 +45,7 @@ class froward(APIRouter):
 
     async def get_cookie_or_token(
         websocket: WebSocket,
-        session: Annotated[str | None, Cookie()] = Depends(login),
+        session: Annotated[str | None, Cookie()] = None,
         token: Annotated[str | None, Query()] = Depends(login),
     ):
         print("token")
