@@ -31,10 +31,14 @@ class ConnectionManager:
         """connect event"""
         print("Cookie:", websocket.cookies["token"])
         print("Login Output:", token)
-        token = await login(websocket.cookies["token"])
-        websocket.token = token
-        await websocket.accept()
-        self.active_connections.append(websocket)
+        try:
+            token = await login(websocket.cookies["token"])
+            websocket.token = token
+            await websocket.accept()
+            self.active_connections.append(websocket)
+        except Exception as e:
+            print(e)
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 
     async def return_task(self, output: Any, websocket: WebSocket):
         """Direct Message"""
