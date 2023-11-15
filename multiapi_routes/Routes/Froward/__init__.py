@@ -45,8 +45,8 @@ class froward(APIRouter):
 
     async def get_cookie_or_token(
         websocket: WebSocket,
-        session: Annotated[str | None, Cookie()] = None,
-        token: Annotated[str | None, Query()] = None,
+        session: Annotated[str | None, Cookie()] = Depends(login),
+        token: Annotated[str | None, Query()] = Depends(login),
     ):
         print("token")
         if session is None and token is None:
@@ -55,7 +55,7 @@ class froward(APIRouter):
 
 
 
-    async def stream(self,websocket: WebSocket,token: str = Depends(login)):
+    async def stream(self,websocket: WebSocket,token: str = Depends(get_cookie_or_token)):
         print("stream")
         print(token)
         print(websocket)
