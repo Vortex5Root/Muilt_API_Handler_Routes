@@ -50,14 +50,13 @@ class froward(APIRouter):
     ):
         print("token")
         if session is None and token is None:
+            print(status.WS_1008_POLICY_VIOLATION)
             raise WebSocketException(code=status.WS_1008_POLICY_VIOLATION)
         return session or token
 
-
-
-    async def stream(self,websocket: WebSocket,token: str = Depends(get_cookie_or_token)):
+    async def stream(self,websocket: WebSocket,cookie_or_token: Annotated[str, Depends(get_cookie_or_token)]):
         print("stream")
-        print(token)
+        print(cookie_or_token)
         print(websocket)
         await websocket.accept()
         await websocket.send_json({"status":"connected"})
