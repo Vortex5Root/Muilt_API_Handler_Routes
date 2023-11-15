@@ -29,7 +29,9 @@ class ConnectionManager:
     
     async def connect(self, websocket: WebSocket):
         """connect event"""
-        token = login(websocket.cookies["token"])
+        print("Cookie:", websocket.cookies["token"])
+        print("Login Output:", token)
+        token = await login(websocket.cookies["token"])
         websocket.token = token
         await websocket.accept()
         self.active_connections.append(websocket)
@@ -42,7 +44,7 @@ class ConnectionManager:
         """disconnect event"""
         self.active_connections.remove(websocket)
 
-class froward(APIRouter):
+class forward(APIRouter):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
