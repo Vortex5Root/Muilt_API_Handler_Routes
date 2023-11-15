@@ -85,44 +85,36 @@ class froward(APIRouter):
         return HTMLResponse("""
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
-            <label>ENDPOINT: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
-            <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
-            <button onclick="connect(event)">Connect</button>
-            <hr>
-            <label>Message: <input type="text" id="messageText" autocomplete="off"/></label>
-            <button onclick="sendMessage(event)">Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = null;
-            function connect(event) {
-                var itemId = document.getElementById("itemId");
-                var token = document.getElementById("token");
-                ws = new WebSocket("ws://"+ itemId.value +":8000/v1/multiapi/froward/stream);
-                ws.onmessage = function(event) {
-                    var messages = document.getElementById('messages')
-                    var message = document.createElement('li')
-                    var content = document.createTextNode(event.data)
-                    message.appendChild(content)
-                    messages.appendChild(message)
-                };
-                event.preventDefault();
-            }
-            function sendMessage(event) {
-                var input = document.getElementById("messageText");
-                ws.send(input.value);
-                input.value = '';
-                event.preventDefault();
-            }
-        </script>
-    </body>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+    <h1>WebSocket with FastAPI</h1>
+    <form action="" onsubmit="sendMessage(event)">
+        <input type="text" id="messageText" autocomplete="off" />
+        <button>Send</button>
+    </form>
+    <ul id='messages'>
+    </ul>
+    <script>
+        var ws = new WebSocket(`ws://localhost:8000/v1/multiapi/froward/stream`);
+        console.log("Connected")
+        ws.onmessage = function (event) {
+            var messages = document.getElementById('messages')
+            var message = document.createElement('li')
+            var content = document.createTextNode(event.data)
+            message.appendChild(content)
+            messages.appendChild(message)
+        };
+        console.log("Send Mesage")
+        function sendMessage(event) {
+            var input = document.getElementById("messageText")
+            ws.send(input.value)
+            input.value = ''
+            event.preventDefault()
+        }
+    </script>
+</body>
 </html>
 """)
 
