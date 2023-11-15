@@ -54,7 +54,7 @@ class froward(APIRouter):
         self.celery = Celery('tasks', broker=bk)
         self.add_api_route("/froward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
         self.add_api_route("/froward", self.Websocket_Example, methods=["GET"])
-        self.add_api_route("/froward/stream", self.stream, methods=["websocket"])
+        self.add_api_route("/froward/stream", self.websocket_endpoint, methods=["websocket"])
         endpoint = WebsocketRPCEndpoint(Steam())
         # add the endpoint to the app
         endpoint.register_route(self, "/ws")
