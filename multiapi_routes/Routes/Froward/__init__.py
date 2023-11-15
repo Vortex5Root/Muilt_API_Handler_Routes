@@ -97,7 +97,21 @@ class froward(APIRouter):
     <ul id='messages'>
     </ul>
     <script>
-        var ws = new WebSocket(`ws://localhost:8000/v1/multiapi/froward/stream`);
+        function getCookie(cname) {
+            let name = cname + "=";
+            let ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+                }
+                if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        var ws = new WebSocket(`ws://`+ window.location.hostname +`:8000/v1/multiapi/froward/stream?token=`+getCookie("token")+``);
         console.log("Connected")
         ws.onmessage = function (event) {
             var messages = document.getElementById('messages')
