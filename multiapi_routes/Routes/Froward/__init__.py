@@ -105,7 +105,7 @@ class froward(APIRouter):
             function connect(event) {
                 var itemId = document.getElementById("itemId");
                 var token = document.getElementById("token");
-                ws = new WebSocket("ws://"+ itemId.value +":8000/v1/multiapi/froward/stream?token=" + token.value);
+                ws = new WebSocket("ws://"+ itemId.value +":8000/v1/multiapi/froward/stream);
                 ws.onmessage = function(event) {
                     var messages = document.getElementById('messages')
                     var message = document.createElement('li')
