@@ -35,12 +35,8 @@ class ConnectionManager:
         await websocket.accept()
         try:
             token = login(token)
-            try:
-                vb = self.vb.read_items(token=token,id=model_id)
-            except Exception as e:
-                await websocket.send_json({"status":"error","result":str(e)})
-                await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-                return None
+            vb = self.vb.read_items(token=token,id=model_id)
+            print(vb)
             self.active_connections.append(websocket)
             return token
         except Exception as e:
