@@ -56,7 +56,8 @@ class Wallets(APIRouter):
         else:
             if not check_wallet(id):
                 raise HTTPException(status_code=404, detail=f"Wallet with id {id} doesn't exist!")
-            permission.append(self.permissions["read"].format(id),self.permissions["all"].format(id))
+            permission.append(self.permissions["read"].format(id))
+            permission.append(self.permissions["all"].format(id))
             if not token.is_allow(permission):
                 raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
             # If id is provided, return the item with the given id
