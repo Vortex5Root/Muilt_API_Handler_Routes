@@ -38,13 +38,15 @@ class ConnectionManager:
             try:
                 vb = self.vb.read_items(token=token,id=model_id)
             except Exception as e:
-                print(e)
+                await websocket.send_json({"status":"error","result":str(e)})
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+                return None
             self.active_connections.append(websocket)
             return token
         except Exception as e:
-            print(e)
+            await websocket.send_json({"status":"error","result":str(e)})
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return None
 
     async def return_task(self, output: Any, websocket: WebSocket):
         """Direct Message"""
@@ -128,14 +130,16 @@ async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Q
     bk = os.environ['CELERY_BROKER_URL']
     celery = Celery('tasks', broker=bk)
     token = await forward_manager.connect(websocket, model_id,token)
-    while True:
-        data = await websocket.receive_json()
-        if data["type"] == "websocket.disconnect":
-            await websocket.close()
-            break
-        elif data[""]:
-            task = celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
-            while task.status() == "DONE":
-                await websocket.send_json({"status":task.status(),"result":task.get()})
-                pass
-            await websocket.send_json(task.get())
+    if token is not None:
+        while True:
+            data = await websocket.receive_json()
+            print(data)
+            if data["type"] == "websocket.disconnect":
+                await websocket.close()
+                break
+            elif data:
+                task = celery.send_task('__start__.brain_task', args=(model_id,data["arg"]))
+                while task.status() == "DONE":
+                    await websocket.send_json({"status":task.status(),"result":task.get()})
+                    pass
+                await websocket.send_json(task.get())
