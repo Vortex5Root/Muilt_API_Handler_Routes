@@ -34,7 +34,7 @@ class ConnectionManager:
         print("Login Output:", token)
         await websocket.accept()
         try:
-            token = await login(token)
+            token = login(token)
             try:
                 vb = self.vb.read_items(token=token,id=model_id)
             except Exception as e:
