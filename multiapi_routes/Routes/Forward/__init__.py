@@ -26,14 +26,20 @@ class ConnectionManager:
     def __init__(self):
         """init method, keeping track of connections"""
         self.active_connections = []
-    
-    async def connect(self, websocket: WebSocket, token: str):
+        self.vb = Virtual_Bond()
+
+    async def connect(self, websocket: WebSocket,model_id : str, token: str):
         """connect event"""
         print("Cookie:", websocket.cookies["token"])
         print("Login Output:", token)
         try:
             token = await login(websocket.cookies["token"])
             websocket.token = token
+            try:
+                vb = self.vb.read_items(token=token,id=model_id)
+            except Exception as e:
+                print(e)
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             await websocket.accept()
             self.active_connections.append(websocket)
         except Exception as e:
@@ -60,10 +66,6 @@ class forward(APIRouter):
         self.celery = Celery('tasks', broker=bk)
         self.add_api_route("/froward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
         self.add_api_route("/froward", self.Websocket_Example, methods=["GET"])
-        self.add_api_route("/froward/stream", self.websocket_endpoint, methods=["websocket"])
-        endpoint = WebsocketRPCEndpoint(Steam())
-        # add the endpoint to the app
-        endpoint.register_route(self, "/ws")
         
     
     def create_item(self,model : str,arg : Dict , token: str = Depends(login)):
@@ -73,88 +75,57 @@ class forward(APIRouter):
             pass
         return task.get()
 
-
-    async def websocket_endpoint(websocket: WebSocket,token : Annotated[str, Query()] = None):
-        print(token)
-        manager = ConnectionManager()
-        await manager.connect(websocket,token)
-        try:
-            while True:
-                data = await websocket.receive()
-                print(data)
-                print(type(data))
-                await manager.send_personal_message(f"Received:{data}",websocket)
-        except WebSocketDisconnect:
-            manager.disconnect(websocket)
-            await manager.send_personal_message("Bye!!!",websocket)
-
     def Websocket_Example(self):
         return HTMLResponse("""
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Chat</title>
-</head>
-<body>
-    <h1>WebSocket with FastAPI</h1>
-    <form action="" onsubmit="sendMessage(event)">
-        <input type="text" id="messageText" autocomplete="off" />
-        <button>Send</button>
-    </form>
-    <ul id='messages'>
-    </ul>
-    <script>
-        function getCookie(cname) {
-            let name = cname + "=";
-            let ca = document.cookie.split(';');
-            for(let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) == ' ') {
-                c = c.substring(1);
-                }
-                if (c.indexOf(name) == 0) {
-                return c.substring(name.length, c.length);
-                }
+    <head>
+        <title>Chat</title>
+    </head>
+    <body>
+        <h1>WebSocket Chat</h1>
+        <form action="" onsubmit="sendMessage(event)">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>Send</button>
+        </form>
+        <ul id='messages'>
+        </ul>
+        <script>
+            var ws = new WebSocket("ws://localhost:8000/test/ws");
+            ws.onmessage = function(event) {
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(event.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            };
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
             }
-            return "";
-        }
-        var ws = new WebSocket(`ws://`+ window.location.hostname +`:8000/v1/multiapi/froward/stream?token=`+getCookie("token")+``);
-        console.log("Connected")
-        ws.onmessage = function (event) {
-            var messages = document.getElementById('messages')
-            var message = document.createElement('li')
-            var content = document.createTextNode(event.data)
-            message.appendChild(content)
-            messages.appendChild(message)
-        };
-        console.log("Send Mesage")
-        function sendMessage(event) {
-            var input = document.getElementById("messageText")
-            ws.send(input.value)
-            input.value = ''
-            event.preventDefault()
-        }
-    </script>
-</body>
+        </script>
+    </body>
 </html>
 """)
 
+forward_ = forward()
 
-class Steam(RpcMethodsBase):
-    async def stream(self,websocket: WebSocket,token: str = Depends(login)):
-        print("stream")
-        print(token.token)
-        await websocket.accept()
-        await websocket.send_json({"status":"connected"})
-        while True:
-            data = await websocket.receive_json()
-            if data["type"] == "websocket.disconnect":
-                await websocket.close()
-                break
-            else:
-                task = self.celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
-                while task.status() == "DONE":
-                    await websocket.send_json({"status":task.status(),"result":task.get()})
-                    pass
-                await websocket.send_json(task.get())
-        return "froward"
+@forward_.websocket("{model_id}/stream")
+async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Cookie()):
+    forward_manager = ConnectionManager()
+    print(token)
+    await forward_manager.connect(websocket, model_id,token)
+    while True:
+        data = await websocket.receive_json()
+        if data["type"] == "websocket.disconnect":
+            await websocket.close()
+            break
+        elif data[""]:
+            task = self.celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
+            while task.status() == "DONE":
+                await websocket.send_json({"status":task.status(),"result":task.get()})
+                pass
+            await websocket.send_json(task.get())
+        
