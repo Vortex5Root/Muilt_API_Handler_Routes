@@ -121,7 +121,7 @@ class forward(APIRouter):
 
 forward_ = forward()
 
-@forward_.websocket("{model_id}/stream")
+@forward_.websocket("/{model_id}/stream")
 async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Cookie()):
     
     forward_manager = ConnectionManager()
