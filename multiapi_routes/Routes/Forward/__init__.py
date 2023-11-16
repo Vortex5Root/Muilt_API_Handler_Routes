@@ -98,7 +98,7 @@ class forward(APIRouter):
             function connect(event) {
                 var modelId = document.getElementById("modelId")
                 var token = document.getElementById("token")
-                var ws = new WebSocket("ws://localhost:8000/v1/multiapi/"+modelId.value+"/ws?token="+token.value);
+                var ws = new WebSocket("ws://192.168.1.205:8000/v1/multiapi/"+modelId.value+"/stream?token="+token.value);
                 ws.onmessage = function(event) {
                     var messages = document.getElementById('messages')
                     var message = document.createElement('li')
@@ -140,4 +140,3 @@ async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = C
                 await websocket.send_json({"status":task.status(),"result":task.get()})
                 pass
             await websocket.send_json(task.get())
-        
