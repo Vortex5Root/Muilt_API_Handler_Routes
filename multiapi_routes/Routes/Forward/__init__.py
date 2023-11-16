@@ -122,12 +122,11 @@ class forward(APIRouter):
 forward_ = forward()
 
 @forward_.websocket("/{model_id}/stream")
-async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Cookie()):
+async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Query(None)):
     
     forward_manager = ConnectionManager()
     bk = os.environ['CELERY_BROKER_URL']
     celery = Celery('tasks', broker=bk)
-    print(token)
     await forward_manager.connect(websocket, model_id,token)
     while True:
         data = await websocket.receive_json()
