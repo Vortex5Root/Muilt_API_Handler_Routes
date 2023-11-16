@@ -108,6 +108,13 @@ class Wallets(APIRouter):
         permission.append(self.permissions["all"].format(id))
         if not token.is_allow(permission):
             raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
-        item = Wallet.find(Wallet.id == id).first()
-        item.delete()
+        item = Wallet.find(Wallet.author == token.token).first()
+        if id == "all":
+            item.key_wallet = {}
+            item.save()
+        elif id in item.key_wallet.keys():
+            del item.key_wallet[id]
+            item.save()
+        else:
+            raise HTTPException(status_code=404, detail=f"Wallet key id {id} doesn't exist!")
         return {"info":f"Wallet ({id}) Deleted!","status":"Success"}
