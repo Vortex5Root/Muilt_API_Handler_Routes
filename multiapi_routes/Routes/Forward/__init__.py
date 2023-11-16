@@ -43,6 +43,10 @@ class ConnectionManager:
             await websocket.send_json({"status":"error","result":str(e)})
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
+        except HTTPException as e:
+            await websocket.send_json({"status":"error","result":str(e.detail)})
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return None
 
     async def return_task(self, output: Any, websocket: WebSocket):
         """Direct Message"""
