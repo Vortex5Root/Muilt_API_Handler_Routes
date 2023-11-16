@@ -39,12 +39,12 @@ class ConnectionManager:
             print(vb)
             self.active_connections.append(websocket)
             return token
-        except Exception as e:
-            await websocket.send_json({"status":"error","result":str(e)})
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            return None
         except HTTPException as e:
             await websocket.send_json({"status":"error","result":str(e.detail)})
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return None
+        except Exception as e:
+            await websocket.send_json({"status":"error","result":str(e)})
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
 
