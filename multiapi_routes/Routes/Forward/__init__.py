@@ -84,6 +84,9 @@ class forward(APIRouter):
     </head>
     <body>
         <h1>WebSocket Chat</h1>
+        <label>Model ID: <input type="text" id="modelId" autocomplete="off" value="foo"/></label>
+        <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
+        <button onclick="connect(event)">Connect</button>
         <form action="" onsubmit="sendMessage(event)">
             <input type="text" id="messageText" autocomplete="off"/>
             <button>Send</button>
@@ -91,14 +94,19 @@ class forward(APIRouter):
         <ul id='messages'>
         </ul>
         <script>
-            var ws = new WebSocket("ws://localhost:8000/test/ws");
-            ws.onmessage = function(event) {
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
+            var ws = null;
+            function connect(event) {
+                var modelId = document.getElementById("modelId")
+                var token = document.getElementById("token")
+                var ws = new WebSocket("ws://localhost:8000/v1/multiapi/"+modelId.value+"/ws?token="+token.value);
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages')
+                    var message = document.createElement('li')
+                    var content = document.createTextNode(event.data)
+                    message.appendChild(content)
+                    messages.appendChild(message)
+                };
+                
             function sendMessage(event) {
                 var input = document.getElementById("messageText")
                 ws.send(input.value)
@@ -114,7 +122,10 @@ forward_ = forward()
 
 @forward_.websocket("{model_id}/stream")
 async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Cookie()):
+    
     forward_manager = ConnectionManager()
+    bk = os.environ['CELERY_BROKER_URL']
+    celery = Celery('tasks', broker=bk)
     print(token)
     await forward_manager.connect(websocket, model_id,token)
     while True:
@@ -123,7 +134,7 @@ async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = C
             await websocket.close()
             break
         elif data[""]:
-            task = self.celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
+            task = celery.send_task('__start__.brain_task', args=(data["model"],data["arg"]))
             while task.status() == "DONE":
                 await websocket.send_json({"status":task.status(),"result":task.get()})
                 pass
