@@ -32,6 +32,7 @@ class ConnectionManager:
         """connect event"""
         print("model:", model_id)
         print("Login Output:", token)
+        await websocket.accept()
         try:
             token = await login(token)
             try:
@@ -39,7 +40,6 @@ class ConnectionManager:
             except Exception as e:
                 print(e)
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            await websocket.accept()
             self.active_connections.append(websocket)
             return token
         except Exception as e:
