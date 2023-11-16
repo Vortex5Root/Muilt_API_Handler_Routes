@@ -76,6 +76,8 @@ class Wallets(APIRouter):
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
         if not token.is_allow(permission):
             raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
+        if Wallet.find(Wallet.author == token.token).count() != 0:
+            raise HTTPException(status_code=403, detail="You already have a wallet!")
         wallet.update({"author":token.token})
         item = Wallet(**wallet)
         item.save()
@@ -87,11 +89,11 @@ class Wallets(APIRouter):
     def update_item(self, new_key : Dict, token: str = Depends(login)):
         permission = [self.permissions["all"].format("*"),self.permissions["update"].format("*")]
         # Define the rules for the wallet model
-        if not token.is_allow(permission):
-            raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
         item = Wallet.find(Wallet.author == token.token).first()
         if not item:
-            raise HTTPException(status_code=404, detail=f"Wallet with id {item.id} doesn't exist!")
+            raise HTTPException(status_code=404, detail=f"You don't have a wallet!")
+        if not token.is_allow(permission):
+            raise HTTPException(status_code=403, detail="Your token isn't allowed to perform this action.")
         permission.append(self.permissions["update"].format(item.id))
         permission.append(self.permissions["all"].format(item.id))
         item.key_wallet.update(new_key)
