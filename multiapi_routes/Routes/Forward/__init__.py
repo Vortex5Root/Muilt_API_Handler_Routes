@@ -30,11 +30,10 @@ class ConnectionManager:
 
     async def connect(self, websocket: WebSocket,model_id : str, token: str):
         """connect event"""
-        print("Cookie:", websocket.cookies["token"])
+        print("model:", model_id)
         print("Login Output:", token)
         try:
-            token = await login(websocket.cookies["token"])
-            websocket.token = token
+            token = await login(token)
             try:
                 vb = self.vb.read_items(token=token,id=model_id)
             except Exception as e:
@@ -42,6 +41,7 @@ class ConnectionManager:
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             await websocket.accept()
             self.active_connections.append(websocket)
+            return token
         except Exception as e:
             print(e)
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
@@ -127,7 +127,7 @@ async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Q
     forward_manager = ConnectionManager()
     bk = os.environ['CELERY_BROKER_URL']
     celery = Celery('tasks', broker=bk)
-    await forward_manager.connect(websocket, model_id,token)
+    token = await forward_manager.connect(websocket, model_id,token)
     while True:
         data = await websocket.receive_json()
         if data["type"] == "websocket.disconnect":
