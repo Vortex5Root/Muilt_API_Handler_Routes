@@ -66,8 +66,8 @@ class forward(APIRouter):
         if bk == None:
             raise HTTPException(status_code=404, detail="No CELERY_BROKER_URL Found")
         self.celery = Celery('tasks', broker=bk)
-        self.add_api_route("/froward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
-        self.add_api_route("/froward", self.Websocket_Example, methods=["GET"])
+        self.add_api_route("/forward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
+        self.add_api_route("/forward", self.Websocket_Example, methods=["GET"])
         
     
     def create_item(self,model : str,arg : Dict , token: str = Depends(login)):
