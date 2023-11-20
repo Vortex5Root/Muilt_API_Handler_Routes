@@ -8,8 +8,12 @@ from redis_om import Field, JsonModel, Migrator
 
 class VirtualBond(JsonModel):
     id : str = Field(index=True, primary_key=True)
+    model_type : str = Field(index=True)
     row_code : str = Field(index=True)
+    status : Optional[str] = Field(index=True)
+    error  : Optional[str] = Field(index=True)
     description : Optional[str] = Field(index=True)
+
     date_created_timestamp: Optional[float] = Field(index=True)
     date_updated_timestamp: Optional[float] = Field(index=True)
     date_accessed_timestamp: Optional[float] = Field(index=True)

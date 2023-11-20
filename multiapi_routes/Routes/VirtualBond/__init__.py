@@ -70,7 +70,7 @@ class Virtual_Bond(APIRouter):
     def create_item(self, virtual_bond : Dict, token: str = Depends(login)):
         permission = [self.permissions["all"].format("*"),self.permissions["create"].format("*")]
         # Define the rules for the virtual_bond model
-        parameters = ["id","row_code"]
+        parameters = ["id","model_type","row_code"]
         # Check if all required parameters are virtual_bond
         rule_check = check_rules(rule_list=parameters, row_rest=virtual_bond)
         if rule_check is not True:
