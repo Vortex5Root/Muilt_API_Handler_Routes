@@ -130,22 +130,26 @@ class forward(APIRouter):
 forward_ = forward()
 
 @forward_.websocket("/{model_id}/stream")
-async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Query(None)):
-    
+async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Query(None)):
     forward_manager = ConnectionManager()
     bk = os.environ['CELERY_BROKER_URL']
     celery = Celery('tasks', broker=bk)
-    token = await forward_manager.connect(websocket, model_id,token)
+    token = await forward_manager.connect(websocket, model_id, token)
     if token is not None:
-        while True:
-            data = await websocket.receive_json()
-            print(data)
-            if data["type"] == "websocket.disconnect":
-                await websocket.close()
-                break
-            elif data:
-                task = celery.send_task('__start__.brain_task', args=(model_id,data["arg"]))
-                while task.status() == "DONE":
-                    await websocket.send_json({"status":task.status(),"result":task.get()})
-                    pass
-                await websocket.send_json(task.get())
+        try:
+            while True:
+                data = await websocket.receive_json()
+                print(data)
+                if data["type"] == "websocket.disconnect":
+                    await forward_manager.disconnect(websocket)
+                    break
+                elif data:
+                    task = celery.send_task('__start__.brain_task', args=(model_id, data["arg"]))
+                    while task.status() == "DONE":
+                        await websocket.send_json({"status": task.status(), "result": task.get()})
+                        pass
+                    await websocket.send_json(task.get())
+
+        except WebSocketDisconnect as e:
+            await forward_manager.disconnect(websocket)
+            raise e
