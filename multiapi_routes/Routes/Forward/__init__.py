@@ -86,46 +86,51 @@ class forward(APIRouter):
 
     def Websocket_Example(self):
         return HTMLResponse("""
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <label>Model ID: <input type="text" id="modelId" autocomplete="off" value="foo"/></label>
-        <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
-        <button onclick="connect(event)">Connect</button>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = null;
-            function connect(event) {
-                var modelId = document.getElementById("modelId")
-                var token = document.getElementById("token")
-                var ws = new WebSocket("ws://192.168.1.205:8000/v1/multiapi/"+modelId.value+"/stream?token="+token.value);
-                ws.onmessage = function(event) {
-                    var messages = document.getElementById('messages')
-                    var message = document.createElement('li')
-                    var content = document.createTextNode(event.data)
-                    message.appendChild(content)
-                    messages.appendChild(message)
-                };
-            }
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-""")
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Chat</title>
+        </head>
+        <body>
+            <h1>WebSocket Chat</h1>
+            <label>Model ID: <input type="text" id="modelId" autocomplete="off" value="foo"/></label>
+            <label>Token: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
+            <button onclick="connect(event)">Connect</button>
+            <form action="" onsubmit="sendMessage(event)">
+                <input type="text" id="messageText" autocomplete="off"/>
+                <button>Send</button>
+            </form>
+            <ul id='messages'>
+            </ul>
+            <script>
+                var ws = null;
+                function connect(event) {
+                    var modelId = document.getElementById("modelId")
+                    var token = document.getElementById("token")
+                    ws = new WebSocket("ws://192.168.1.205:8000/v1/multiapi/"+modelId.value+"/stream?token="+token.value);
+                    ws.onmessage = function(event) {
+                        var messages = document.getElementById('messages')
+                        var message = document.createElement('li')
+                        var content = document.createTextNode(event.data)
+                        message.appendChild(content)
+                        messages.appendChild(message)
+                    };
+                }
+                function sendMessage(event) {
+                    var input = document.getElementById("messageText")
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(input.value)
+                        input.value = ''
+                    } else {
+                        alert("WebSocket connection is closed. Please connect first.")
+                        ws.close()
+                    }
+                    event.preventDefault()
+                }
+            </script>
+        </body>
+    </html>
+    """)
 
 forward_ = forward()
 
@@ -139,7 +144,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
         try:
             print("Connected")
             while True:
-                data = await websocket.receive_text()
+                data = await websocket.receive()
                 print(data)
                 if data["type"] == "websocket.disconnect":
                     websocket.send_json({"status":"success","result":"Disconnected"})
