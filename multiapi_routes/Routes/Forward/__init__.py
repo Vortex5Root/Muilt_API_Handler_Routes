@@ -141,7 +141,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                 data = await websocket.receive_json()
                 print(data)
                 if data["type"] == "websocket.disconnect":
-                    await forward_manager.disconnect(websocket)
+                    forward_manager.disconnect(websocket)
                     break
                 elif data:
                     task = celery.send_task('__start__.brain_task', args=(model_id, data["arg"]))
@@ -151,5 +151,5 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     await websocket.send_json(task.get())
 
         except WebSocketDisconnect as e:
-            await forward_manager.disconnect(websocket)
+            forward_manager.disconnect(websocket)
             raise e
