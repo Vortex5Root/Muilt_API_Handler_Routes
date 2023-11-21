@@ -115,12 +115,12 @@ class forward(APIRouter):
                     message.appendChild(content)
                     messages.appendChild(message)
                 };
-                function sendMessage(event) {
-                    var input = document.getElementById("messageText")
-                    ws.send(input.value)
-                    input.value = ''
-                    event.preventDefault()
-                }
+            }
+            function sendMessage(event) {
+                var input = document.getElementById("messageText")
+                ws.send(input.value)
+                input.value = ''
+                event.preventDefault()
             }
         </script>
     </body>
@@ -152,4 +152,5 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                         pass
                     await websocket.send_json(task.get())
         except WebSocketDisconnect as e:
+            print(e)
             forward_manager.disconnect(websocket)
