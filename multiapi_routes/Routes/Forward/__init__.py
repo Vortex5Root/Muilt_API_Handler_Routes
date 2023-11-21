@@ -44,10 +44,12 @@ class ConnectionManager:
             self.active_connections.append(websocket)
             return token
         except HTTPException as e:
+            print("HTTPException:",e)
             await websocket.send_json({"status":"error","result":str(e.detail)})
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
         except Exception as e:
+            print("Exception:",e)
             await websocket.send_json({"status":"error","result":str(e)})
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
