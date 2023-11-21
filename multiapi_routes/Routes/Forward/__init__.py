@@ -36,6 +36,8 @@ class ConnectionManager:
         try:
             token = login(token)
             vb = self.vb.read_items(token=token,id=model_id)
+            if vb["status"] == "error":
+                raise HTTPException(status_code=404, detail=vb["error"])
             print(vb)
             self.active_connections.append(websocket)
             return token
@@ -132,7 +134,7 @@ async def websocket_endpoint(websocket: WebSocket,model_id : str, token: str = Q
     token = await forward_manager.connect(websocket, model_id,token)
     if token is not None:
         while True:
-            data = await websocket.receive_json()
+            data = await websocket.receive()
             print(data)
             if data["type"] == "websocket.disconnect":
                 await websocket.close()
