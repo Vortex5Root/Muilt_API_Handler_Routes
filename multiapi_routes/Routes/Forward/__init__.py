@@ -37,10 +37,10 @@ class ConnectionManager:
             token = login(token)
             
             vb = self.vb.read_items(token=token,id=model_id)
-            print(vb.status)
-            if vb["status"] == "error":
-                raise HTTPException(status_code=404, detail=vb["error"])
-            print(vb)
+            #print(vb.status)
+            if vb.status == "error":
+                raise HTTPException(status_code=404, detail=vb.error)
+            #print(vb)
             self.active_connections.append(websocket)
             return token
         except HTTPException as e:
