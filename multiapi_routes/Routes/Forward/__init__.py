@@ -115,7 +115,6 @@ class forward(APIRouter):
                     message.appendChild(content)
                     messages.appendChild(message)
                 };
-                event.preventDefault()
             }
             function sendMessage(event) {
                 var input = document.getElementById("messageText")
