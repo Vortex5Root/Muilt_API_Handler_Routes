@@ -42,7 +42,7 @@ class ConnectionManager:
                 raise HTTPException(status_code=404, detail=vb.error)
             #print(vb)
             self.active_connections.append(websocket)
-            websocket.send_json({"status":"success","result":"Connected"})
+            await websocket.send_json({"status":"success","result":"Connected"})
             return token
         except HTTPException as e:
             print("HTTPException:",e)
