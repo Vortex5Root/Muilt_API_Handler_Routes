@@ -138,7 +138,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
     if token is not None:
         try:
             while True:
-                data = await websocket.receive_json()
+                data = await websocket.receive_text()
                 print(data)
                 if data["type"] == "websocket.disconnect":
                     forward_manager.disconnect(websocket)
