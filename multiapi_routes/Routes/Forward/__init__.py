@@ -141,6 +141,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                 data = await websocket.receive_text()
                 print(data)
                 if data["type"] == "websocket.disconnect":
+                    websocket.send_json({"status":"success","result":"Disconnected"})
                     forward_manager.disconnect(websocket)
                     break
                 elif data:
