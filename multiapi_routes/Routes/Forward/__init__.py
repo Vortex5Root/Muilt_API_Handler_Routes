@@ -151,7 +151,12 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     forward_manager.disconnect(websocket)
                     break
                 elif data:
-                    task = celery.send_task('__start__.brain_task', args=(model_id, data["arg"]))
+                    input_data = None
+                    if data["type"] == "websocket.receive":
+                        input_data = data["text"]
+                    elif data["type"] == "bytes":
+                        input_data = data["bytes"]
+                    task = celery.send_task('__start__.brain_task', args=(model_id, input_data))
                     while task.status() == "DONE":
                         await websocket.send_json({"status": task.status(), "result": task.get()})
                         pass
