@@ -138,21 +138,16 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
     if token is not None:
         try:
             while True:
-                try:
-                    data = await websocket.receive_text()
-                    if data["type"] == "websocket.disconnect":
-                        websocket.send_json({"status":"success","result":"Disconnected"})
-                        forward_manager.disconnect(websocket)
-                        break
-                    elif data:
-                        task = celery.send_task('__start__.brain_task', args=(model_id, data["arg"]))
-                        while task.status() == "DONE":
-                            await websocket.send_json({"status": task.status(), "result": task.get()})
-                            pass
-                        await websocket.send_json(task.get())
-                except Exception as e:
-                    print(e)
-                    pass
+                data = await websocket.receive_text()
+                if data["type"] == "websocket.disconnect":
+                    websocket.send_json({"status":"success","result":"Disconnected"})
+                    forward_manager.disconnect(websocket)
+                    break
+                elif data:
+                    task = celery.send_task('__start__.brain_task', args=(model_id, data["arg"]))
+                    while task.status() == "DONE":
+                        await websocket.send_json({"status": task.status(), "result": task.get()})
+                        pass
+                    await websocket.send_json(task.get())
         except WebSocketDisconnect as e:
             forward_manager.disconnect(websocket)
-            raise e
