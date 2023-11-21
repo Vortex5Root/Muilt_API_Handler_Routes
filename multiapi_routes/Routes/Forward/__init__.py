@@ -157,7 +157,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     elif data["type"] == "bytes":
                         input_data = data["bytes"]
                     task = celery.send_task('multiapi_routes.brain_task', args=(model_id,model_id, token.token, input_data))
-                    while task.status == "DONE":
+                    while not task.ready():
                         await websocket.send_json({"status": task.status, "result": task.get()})
                         pass
                     await websocket.send_json(task.get())
