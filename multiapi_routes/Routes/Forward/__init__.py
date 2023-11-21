@@ -135,6 +135,36 @@ class forward(APIRouter):
 forward_ = forward()
 
 @forward_.websocket("/{model_id}/stream")
+from fastapi.websockets import WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+from fastapi import WebSocket, APIRouter, Depends, Query
+from typing import Any, Dict
+from celery import Celery
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+class ConnectionManager:
+    """Class defining socket events"""
+    def __init__(self):
+        pass
+
+    async def connect(self, websocket: WebSocket, model_id: str, token: str):
+        # Your implementation here
+        pass
+
+    async def return_task(self, output: Any, websocket: WebSocket):
+        # Your implementation here
+        pass
+
+    def disconnect(self, websocket: WebSocket):
+        # Your implementation here
+        pass
+
+forward = APIRouter()
+
+@forward.websocket("/{model_id}/stream")
 async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Query(None)):
     forward_manager = ConnectionManager()
     bk = os.environ['CELERY_BROKER_URL']
@@ -156,9 +186,9 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                         input_data = data["text"]
                     elif data["type"] == "bytes":
                         input_data = data["bytes"]
-                    task = celery.send_task('multiapi.brain_task', args=(model_id,token.token ,input_data))
-                    while task.status() == "DONE":
-                        await websocket.send_json({"status": task.status(), "result": task.get()})
+                    task = celery.send_task('multiapi_routes.brain_task', args=(model_id, token.token, input_data))
+                    while task.status == "DONE":
+                        await websocket.send_json({"status": task.status, "result": task.get()})
                         pass
                     await websocket.send_json(task.get())
         except WebSocketDisconnect as e:
