@@ -35,7 +35,9 @@ class ConnectionManager:
         await websocket.accept()
         try:
             token = login(token)
+            
             vb = self.vb.read_items(token=token,id=model_id)
+            print(vb)
             if vb["status"] == "error":
                 raise HTTPException(status_code=404, detail=vb["error"])
             print(vb)
