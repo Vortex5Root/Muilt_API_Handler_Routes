@@ -105,27 +105,27 @@ class forward(APIRouter):
             <script>
                 var ws = null;
                 function connect(event) {
-                    var modelId = document.getElementById("modelId")
-                    var token = document.getElementById("token")
-                    ws = new WebSocket("ws://192.168.1.205:8000/v1/multiapi/"+modelId.value+"/stream?token="+token.value);
+                    var modelId = document.getElementById("modelId").value;
+                    var token = document.getElementById("token").value;
+                    ws = new WebSocket("ws://192.168.1.205:8000/v1/forward/"+modelId+"/stream?token="+token);
                     ws.onmessage = function(event) {
-                        var messages = document.getElementById('messages')
-                        var message = document.createElement('li')
-                        var content = document.createTextNode(event.data)
-                        message.appendChild(content)
-                        messages.appendChild(message)
+                        var messages = document.getElementById('messages');
+                        var message = document.createElement('li');
+                        var content = document.createTextNode(event.data);
+                        message.appendChild(content);
+                        messages.appendChild(message);
                     };
                 }
                 function sendMessage(event) {
-                    var input = document.getElementById("messageText")
+                    var input = document.getElementById("messageText");
                     if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(input.value)
-                        input.value = ''
+                        ws.send(input.value);
+                        input.value = '';
                     } else {
-                        alert("WebSocket connection is closed. Please connect first.")
-                        ws.close()
+                        alert("WebSocket connection is closed. Please connect first.");
+                        ws.close();
                     }
-                    event.preventDefault()
+                    event.preventDefault();
                 }
             </script>
         </body>
@@ -147,7 +147,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                 data = await websocket.receive()
                 print(data)
                 if data["type"] == "websocket.disconnect":
-                    websocket.send_json({"status":"success","result":"Disconnected"})
+                    await websocket.send_json({"status":"success","result":"Disconnected"})
                     forward_manager.disconnect(websocket)
                     break
                 elif data:
