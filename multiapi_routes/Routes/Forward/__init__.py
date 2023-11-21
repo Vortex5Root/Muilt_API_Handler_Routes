@@ -17,6 +17,8 @@ from multiapi_routes.Routes.VirtualBond import Virtual_Bond
 
 import os
 
+from celery.result import AsyncResult
+
 load_dotenv()
 
 from fastapi import WebSocket
@@ -158,7 +160,9 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                         input_data = data["bytes"]
                     task = celery.send_task('multiapi.brain_task', args=(model_id,model_id, token.token, input_data))
                     while True:
-                        if task.state == "SUCCESS":
+                        done = AsyncResult(task.id)
+                        current_status = done.status
+                        if current_status == 'SUCCESS':
                             result = task.get()
                             await websocket.send_json(result)
                             break
