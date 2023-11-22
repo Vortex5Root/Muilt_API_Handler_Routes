@@ -135,13 +135,14 @@ class forward(APIRouter):
     </html>
     """)
 
+bk = os.environ['CELERY_BROKER_URL']
+
 forward_ = forward()
 
 @forward_.websocket("/{model_id}/stream")
 async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Query(None)):
     print("start new WebSocket connection")
     forward_manager = ConnectionManager()
-    bk = os.environ['CELERY_BROKER_URL']
     celery = Celery('tasks', broker=bk)
     print("New Client")
     token = await forward_manager.connect(websocket, model_id, token)
@@ -172,4 +173,4 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     await websocket.send_json(task.get())
         except WebSocketDisconnect as e:
             print("WebSocket Error",e)
-            forward_manager.disconnect(websocket)
+            await forward_manager.disconnect(websocket)
