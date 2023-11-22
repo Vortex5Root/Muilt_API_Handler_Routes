@@ -109,7 +109,8 @@ class forward(APIRouter):
                 function connect(event) {
                     var modelId = document.getElementById("modelId").value;
                     var token = document.getElementById("token").value;
-                    ws = new WebSocket("ws://"+window.location.host+":8000/v1/forward/"+modelId+"/stream?token="+token);
+                    var url = window.location.host;
+                    ws = new WebSocket("ws://"+url+":8000/v1/forward/"+modelId+"/stream?token="+token);
                     ws.onmessage = function(event) {
                         var messages = document.getElementById('messages');
                         var message = document.createElement('li');
