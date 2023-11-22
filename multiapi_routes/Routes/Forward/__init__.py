@@ -142,6 +142,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
     forward_manager = ConnectionManager()
     bk = os.environ['CELERY_BROKER_URL']
     celery = Celery('tasks', broker=bk)
+    print("New Client")
     token = await forward_manager.connect(websocket, model_id, token)
     if token is not None:
         try:
