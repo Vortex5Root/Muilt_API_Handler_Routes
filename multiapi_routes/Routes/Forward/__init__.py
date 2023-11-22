@@ -139,6 +139,7 @@ forward_ = forward()
 
 @forward_.websocket("/{model_id}/stream")
 async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Query(None)):
+    print("start new WebSocket connection")
     forward_manager = ConnectionManager()
     bk = os.environ['CELERY_BROKER_URL']
     celery = Celery('tasks', broker=bk)
@@ -170,5 +171,5 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                             break
                     await websocket.send_json(task.get())
         except WebSocketDisconnect as e:
-            print(e)
+            print("WebSocket Error",e)
             forward_manager.disconnect(websocket)
