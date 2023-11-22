@@ -110,7 +110,7 @@ class forward(APIRouter):
                     var modelId = document.getElementById("modelId").value;
                     var token = document.getElementById("token").value;
                     var url = window.location.host;
-                    ws = new WebSocket("ws://10.20.18.2:8000/v1/forward/"+modelId+"/stream?token="+token);
+                    ws = new WebSocket("ws://"+window.location.host+"/v1/multiapi/"+modelId+"/stream?token="+token);
                     ws.onmessage = function(event) {
                         var messages = document.getElementById('messages');
                         var message = document.createElement('li');
