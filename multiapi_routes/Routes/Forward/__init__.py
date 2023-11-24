@@ -187,7 +187,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                 try:
                     task = await tasks.get()
                     print(task.id)
-                    while task.status() == "DONE":
+                    while task.status == "DONE":
                         pass
                     await websocket.send_json(task.get())
                 except Exception as e:
