@@ -174,7 +174,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                             input_data = data["text"]
                         elif data["type"] == "bytes":
                             input_data = data["bytes"]
-                        task = celery.send_task('multiapi.brain_task', args=(model_id,model_id, token.token, input_data))
+                        task = celery.send_task('multiapi.brain_task', args=(model_id, token.token, input_data))
                         await tasks.put(task)
                         print("Task Added")
                         #await websocket.send_json(task.get())
