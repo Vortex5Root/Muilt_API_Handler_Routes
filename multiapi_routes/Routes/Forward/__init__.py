@@ -141,14 +141,6 @@ bk = os.environ['CELERY_BROKER_URL']
 
 forward_ = forward()
 
-def return_task(task: Any, websocket: WebSocket):
-    while True:
-        print(task.status())
-        if task.ready():
-            result = task.get()
-            websocket.send_json(result)
-            break
-
 @forward_.websocket("/{model_id}/stream")
 async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Query(None)):
     print("start new WebSocket connection")
@@ -163,7 +155,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
             while True:
                 try:
                     data = await websocket.receive()
-                    print(data)
+                    print("Received: ",data)
                     if data["type"] == "websocket.disconnect":
                         await websocket.send_json({"status":"success","result":"Disconnected"})
                         forward_manager.disconnect(websocket)
@@ -174,6 +166,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                             input_data = data["text"]
                         elif data["type"] == "bytes":
                             input_data = data["bytes"]
+                        print("Adding Task",data)
                         task = celery.send_task('multiapi.brain_task', args=(model_id, token.token, input_data))
                         await tasks.put(task)
                         print("Task Added")
@@ -189,7 +182,9 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     print(task.id)
                     while task.status == "DONE":
                         pass
+                    print("Task Done")
                     await websocket.send_json(task.get())
+                    print("Task Sent")
                 except Exception as e:
                     print(e)
                     pass
