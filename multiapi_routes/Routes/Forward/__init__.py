@@ -166,7 +166,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                             input_data = data["text"]
                         elif data["type"] == "bytes":
                             input_data = data["bytes"]
-                        print("Adding Task",data)
+                        print("Adding Task",input_data)
                         task = celery.send_task('multiapi.brain_task', args=(model_id, token.token, input_data))
                         await tasks.put(task)
                         print("Task Added")
@@ -174,6 +174,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                 except WebSocketDisconnect as e:
                     print("WebSocket Error",e)
                     await forward_manager.disconnect(websocket)
+                    break
 
         async def send(websocket: WebSocket):
             while True:
@@ -185,6 +186,10 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     print("Task Done")
                     await websocket.send_json(task.get())
                     print("Task Sent")
+                except WebSocketDisconnect as e:
+                    print("WebSocket Error",e)
+                    await forward_manager.disconnect(websocket)
+                    break
                 except Exception as e:
                     print(e)
                     pass
