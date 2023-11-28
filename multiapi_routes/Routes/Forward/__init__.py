@@ -181,7 +181,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                 try:
                     task = await tasks.get()
                     print(task.id)
-                    while task.status == "SUCCESS":
+                    while task.status != "SUCCESS":
                         print(task.status,end="\r")
                         await asyncio.sleep(1)
                     print(task.status)
