@@ -185,8 +185,8 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                         print(task.status,end="\r")
                         await asyncio.sleep(1)
                     info = task.result
-                    result = AsyncResult(task.id).get()
-                    print(info,result)
+                    #result = AsyncResult(task.id).get()
+                    print(info)
                     #info = await task.get()
                     print("Task Info",info)
                     await websocket.send_json(info)
