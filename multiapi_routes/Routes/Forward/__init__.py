@@ -174,6 +174,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     logging.info(task.id)
                     while task.status != "SUCCESS":
                         logging.info(task.status, end="\r")
+                        await asyncio.sleep(0.001)
                     logging.info(task.status)
                     info = task.result
                     logging.info(info)
