@@ -1,29 +1,24 @@
+import os
 import asyncio
+import logging
 import threading
-from fastapi import APIRouter, WebSocket ,Depends, HTTPException,Cookie, Query,WebSocketException, status
 
-from fastapi.websockets import WebSocketDisconnect
-from fastapi.responses import HTMLResponse
+from typing import Any, Dict
+from dotenv import load_dotenv
 
 from vauth import login , VAuth
 
 from celery import Celery
 
-from dotenv import load_dotenv
+from fastapi import WebSocket
 
-from typing import Any, Dict, Annotated
-
-from fastapi_websocket_rpc import RpcMethodsBase, WebsocketRPCEndpoint
+from fastapi import APIRouter, WebSocket ,Depends, HTTPException, Query, status
+from fastapi.responses import HTMLResponse
+from fastapi.websockets import WebSocketDisconnect
 
 from multiapi_routes.Routes.VirtualBond import Virtual_Bond
 
-import os
-
-from celery.result import AsyncResult
-
 load_dotenv()
-
-from fastapi import WebSocket
 
 class ConnectionManager:
     """Class defining socket events"""
@@ -34,8 +29,6 @@ class ConnectionManager:
 
     async def connect(self, websocket: WebSocket,model_id : str, token: str):
         """connect event"""
-        print("model:", model_id)
-        print("Login Output:", token)
         await websocket.accept()
         try:
             token = login(token)
@@ -143,19 +136,17 @@ forward_ = forward()
 
 @forward_.websocket("/{model_id}/stream")
 async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Query(None)):
-    print("start new WebSocket connection")
     forward_manager = ConnectionManager()
     celery = Celery('tasks', broker=bk, backend=bk)
-    print("New Client")
     token = await forward_manager.connect(websocket, model_id, token)
     if token is not None:
-        #Queue
+        # Queue
         tasks = asyncio.Queue()
         async def rcv(websocket: WebSocket = websocket):
             while True:
                 try:
                     data = await websocket.receive()
-                    print("Received: ",data)
+                    logging.info("Received: %s", data)
                     if data["type"] == "websocket.disconnect":
                         await websocket.send_json({"status":"success","result":"Disconnected"})
                         forward_manager.disconnect(websocket)
@@ -166,13 +157,13 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                             input_data = data["text"]
                         elif data["type"] == "bytes":
                             input_data = data["bytes"]
-                        print("Adding Task",input_data)
+                        logging.info("Adding Task %s", input_data)
                         task = celery.send_task('multiapi.brain_task', args=(model_id, token.token, input_data))
                         await tasks.put(task)
-                        print("Task Added")
+                        logging.info("Task Added")
                         await websocket.send_json({"status":"success","result":"Task Added"})
                 except WebSocketDisconnect as e:
-                    print("WebSocket Error",e)
+                    logging.error("WebSocket Error: %s", e)
                     forward_manager.disconnect(websocket)
                     break
 
@@ -180,45 +171,20 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
             while True:
                 try:
                     task = await tasks.get()
-                    print(task.id)
+                    logging.info(task.id)
                     while task.status != "SUCCESS":
-                        print(task.status,end="\r")
-                        await asyncio.sleep(1)
-                    print(task.status)
+                        logging.info(task.status, end="\r")
+                    logging.info(task.status)
                     info = task.result
-                    #result = AsyncResult(task.id).get()
-                    print(info)
-                    #info = await task.get()
-                    print("Task Info",info)
+                    logging.info(info)
+                    logging.info("Task Info %s", info)
                     await websocket.send_json(info)
-                    print("Task Sent")
+                    logging.info("Task Sent")
                 except WebSocketDisconnect as e:
-                    print("WebSocket Error",e)
+                    logging.error("WebSocket Error: %s", e)
                     forward_manager.disconnect(websocket)
                     break
                 except Exception as e:
-                    print(e)
+                    logging.error(e)
                     pass
         await asyncio.gather(send(), rcv())
-        '''try:
-            print("Connected")
-            while True:
-                data = await websocket.receive()
-                print(data)
-                if data["type"] == "websocket.disconnect":
-                    await websocket.send_json({"status":"success","result":"Disconnected"})
-                    forward_manager.disconnect(websocket)
-                    break
-                elif data:
-                    input_data = None
-                    if data["type"] == "websocket.receive":
-                        input_data = data["text"]
-                    elif data["type"] == "bytes":
-                        input_data = data["bytes"]
-                    task = celery.send_task('multiapi.brain_task', args=(model_id,model_id, token.token, input_data))
-                    thread = threading.Thread(target=return_task, args=(task,websocket))
-                    thread.start()
-                    #await websocket.send_json(task.get())
-        except WebSocketDisconnect as e:
-            print("WebSocket Error",e)
-            await forward_manager.disconnect(websocket)'''
