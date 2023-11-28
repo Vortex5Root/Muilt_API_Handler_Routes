@@ -151,7 +151,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
     if token is not None:
         #Queue
         tasks = asyncio.Queue()
-        async def rcv():
+        async def rcv(websocket: WebSocket = websocket):
             while True:
                 try:
                     data = await websocket.receive()
@@ -173,7 +173,7 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                         await websocket.send_json({"status":"success","result":"Task Added"})
                 except WebSocketDisconnect as e:
                     print("WebSocket Error",e)
-                    await forward_manager.disconnect(websocket)
+                    forward_manager.disconnect(websocket)
                     break
 
         async def send():
@@ -192,10 +192,9 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                     print("Task Sent")
                 except WebSocketDisconnect as e:
                     print("WebSocket Error",e)
-                    await forward_manager.disconnect(websocket)
+                    forward_manager.disconnect(websocket)
                     break
                 except Exception as e:
-                    await forward_manager.disconnect(websocket)
                     print(e)
                     pass
         await asyncio.gather(send(), rcv())
