@@ -181,12 +181,11 @@ async def websocket_endpoint(websocket: WebSocket, model_id: str, token: str = Q
                 try:
                     task = await tasks.get()
                     print(task.id)
-                    ola = AsyncResult(task.id)
-                    while ola.status == "SUCCESS":
+                    while task.status == "SUCCESS":
                         print(task.status,end="\r")
                         pass
-                    info = ola.result
-                    print(ola.result)
+                    info = task.result
+                    print(info)
                     #info = await task.get()
                     print("Task Info",info)
                     await websocket.send_json(info)
