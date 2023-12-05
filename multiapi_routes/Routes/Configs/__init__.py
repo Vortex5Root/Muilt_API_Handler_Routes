@@ -83,7 +83,7 @@ class Configs(APIRouter):
         if rule_check is not True:
             raise HTTPException(status_code=400, detail=f"Missing or invalid parameters: {rule_check}")
         check_function = self.skeletons.read_items(token,id=config["api_id"])
-        if config["function_name"] not in [_ for _ in check_function.skeleton["skeleton"]]:
+        if config["function_name"] not in [_ for _ in check_function["skeleton"]]:
             raise HTTPException(status_code=400, detail=f"Function name {config['function_name']} not found in api {config['api_id']}")
         # If the token is allowed, create the config model
         permission.append(self.permissions["create"].format(config["id"]))  

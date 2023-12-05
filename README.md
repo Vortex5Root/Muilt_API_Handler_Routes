@@ -18,8 +18,10 @@ from muilt_api_handler_routes.Routes.Skeleton import Skeleton
 
 app = FastAPI()
 
+app.include_router(Wallet(),    prefix="/v1/muiltapi")
 app.include_router(ConfigModel(),  prefix="/v1/muiltapi")
 app.include_router(Skeletons(),    prefix="/v1/muiltapi")
+app.include_router(Virtual_Bound(),    prefix="/v1/muiltapi")
 ```
 
 
