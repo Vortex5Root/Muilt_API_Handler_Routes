@@ -77,7 +77,7 @@ class forward(APIRouter):
     def create_item(self,model : str,arg : Dict , token: str = Depends(login)):
         self.vb.read_items(token=token,id=model)
         task = self.celery.send_task('multiapi.brain_task', args=(arg))
-        while task.status() == "DONE":
+        while task.status != "SUCCESS":
             pass
         return task.get()
 
