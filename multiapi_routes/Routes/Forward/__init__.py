@@ -69,7 +69,7 @@ class forward(APIRouter):
         self.vb = Virtual_Bond()
         if bk == None:
             raise HTTPException(status_code=404, detail="No CELERY_BROKER_URL Found")
-        self.celery = Celery('tasks', broker=bk)
+        self.celery = Celery('tasks', broker=bk, backend=bk)
         self.add_api_route("/forward", self.create_item, methods=["POST"], dependencies=[Depends(login)])
         self.add_api_route("/forward", self.Websocket_Example, methods=["GET"])
         
@@ -77,8 +77,9 @@ class forward(APIRouter):
     def create_item(self,model : str,arg : Dict , token: str = Depends(login)):
         self.vb.read_items(token=token,id=model)
         task = self.celery.send_task('multiapi.brain_task', args=(model, token.token, arg))
+        print(task.id)
         while task.status != "SUCCESS":
-            pass
+            print(task.status,end="\r")
         return task.get()
 
     def Websocket_Example(self):
